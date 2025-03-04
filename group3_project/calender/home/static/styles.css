@@ -4,6 +4,9 @@ CSS sheet to style home page
 
 body {
     font-family: Gergia, sans-serif;
+    background: url("images/calendar.jpg") no-repeat center center fixed;
+    background-size: 50%; 
+    background-attachment: fixed; 
     background-color: #ededed;
     text-align: center;
 }
@@ -26,7 +29,3 @@ p {
     color: #5d91f1;
 }
 
-img {
-    width: 100%;
-    border-radius: 10px;
-}
