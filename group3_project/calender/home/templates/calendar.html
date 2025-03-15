@@ -1,0 +1,86 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar</title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.4/index.global.min.js"></script>
+    
+    <style>
+        #calendar {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+    {% include 'navigationbar.html' %}
+    <div class="content">
+        <header>
+            <h1>Academic Calendar</h1>
+        </header>
+        <main>
+            <div id='calendar'></div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var currentYear = new Date().getFullYear();
+
+            // Calculate the number of days from today and the due date
+            function getDaysUntil(dueDate) {
+                var today = moment();
+                var due = moment(dueDate);
+                return due.diff(today, 'days');
+            }
+
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: ''
+                },
+                validRange: {
+                    start: currentYear + "-01-01",
+                    end: currentYear + "-12-31"
+                },
+                // Display all events on calendar
+                events: [
+                    {% for event in events %}
+                        {
+                            title: "{{event.course_name}}: {{ event.title }} ({{ event.event_type }})",
+                            start: "{{ event.due_date|date:'Y-m-d' }}",
+                            due_date: "{{ event.due_date|date:'Y-m-d' }}", 
+                            textColor: "black", 
+
+                            // Set background color based on due date
+                            backgroundColor: (function() {
+                                var daysUntilDue = getDaysUntil("{{ event.due_date|date:'Y-m-d' }}");
+
+                                if (daysUntilDue <= 3) {
+                                    return '#e05045';  // Due within 3 days
+                                } else if (daysUntilDue > 3 && daysUntilDue <= 7) {
+                                    return '#f0ec2ea8';  // Due between 4 and 7 days
+                                } else {
+                                    return '#3cda49';  // Due beyond a week
+                                }
+                            })()
+                        },
+                    {% endfor %}
+                ],
+            });
+            calendar.render()
+        });
+    </script>
+</body>
+</html>
