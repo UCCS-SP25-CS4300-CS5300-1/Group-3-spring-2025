@@ -1,0 +1,74 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  ################################################################
+  # 1. AI Code Review (Using OpenAI API)
+  ################################################################
+  ai-code-review:
+    name: AI Code Review
+    # We only need to run this on pull requests
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      # (A) Get the diff of changes
+      - name: Get PR diff
+        id: diff
+        run: |
+          git fetch origin main
+          DIFF=$(git diff origin/main...HEAD)
+          echo "diff<<EOF" >> $GITHUB_OUTPUT
+          echo "$DIFF" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      # (B) Set up OpenAI API key from GitHub Secrets
+      - name: Set up OpenAI API key
+        run: |
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> $GITHUB_ENV
+
+      # (C) Install OpenAI Python client
+      - name: Install OpenAI Python client
+        run: |
+          pip install openai
+
+      # (D) Call OpenAI API with the diff (Python script)
+      - name: AI Code Review
+        run: |
+          python scripts/review_script.py "${{ steps.diff.outputs.diff }}"
+
+  ################################################################
+  # 2. Automated Tests + Coverage
+  ################################################################
+  test:
+    name: Run Tests & Report Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'  # or your desired version
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          # Make sure coverage is in your requirements.txt or install explicitly:
+          # pip install coverage
+
+      - name: Run tests with coverage
+        run: |
+          coverage run manage.py test
+          coverage report -m
