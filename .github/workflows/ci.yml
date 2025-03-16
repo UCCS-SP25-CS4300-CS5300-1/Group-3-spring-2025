@@ -1,0 +1,75 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  ################################################################
+  # 1. AI Code Review (Using OpenAI API)
+  ################################################################
+  ai-code-review:
+    name: AI Code Review
+    # We only need to run this on pull requests
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      #  (A) Get the diff of changes
+      - name: Get PR diff
+        id: diff
+        run: |
+          # This exports the diff to a file or environment variable.
+          git fetch origin main
+          DIFF=$(git diff origin/main...HEAD)
+          echo "diff<<EOF" >> $GITHUB_OUTPUT
+          echo "$DIFF" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      #  (B) Call OpenAI API with the diff
+      - name: AI Code Review
+        run: |
+          echo "Performing AI code review..."
+          # Example: We echo the diff to illustrate. In reality, you'd call the OpenAI API here
+          # using a script or custom action that passes the ${{ steps.diff.outputs.diff }}.
+          # For instance, a Python script or a custom GitHub Action.
+
+          # Example pseudo-code:
+          # pip install openai
+          # python review_script.py "${{ steps.diff.outputs.diff }}"
+
+      #  (C) Post the AI feedback to PR (Optional)
+      #  You can use the GitHub CLI or a custom approach to comment on the PR with the AI's response.
+
+  ################################################################
+  # 2. Automated Tests + Coverage
+  ################################################################
+  test:
+    name: Run Tests & Report Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'  # or your desired version
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          # Make sure coverage is in your requirements.txt or install explicitly:
+          # pip install coverage
+
+      - name: Run tests with coverage
+        run: |
+          coverage run manage.py test
+          coverage report -m
