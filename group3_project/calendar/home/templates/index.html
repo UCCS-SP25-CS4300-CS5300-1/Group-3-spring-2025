@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+    <title>Calendar Project</title>
+</head>
+<body>
+    {% include 'navigationbar.html' %}
+    <div class="content">
+        <header>
+            <h1>Calendai</h1>
+        </header>
+        <main>
+            <p>This homepage is so cool</p>
+            <!-- Canvas Credentials Form -->
+            <form method="post" action="{% url 'fetch_assignments' %}">
+                {% csrf_token %}
+                <div>
+                    <label for="canvas_url">Canvas URL:</label>
+                    <input type="url" name="canvas_url" id="canvas_url" required placeholder="https://yourcanvas.instructure.com">
+                </div>
+                <div>
+                    <label for="api_token">API Token:</label>
+                    <input type="password" name="api_token" id="api_token" required placeholder="Enter your API token">
+                </div>
+                <button type="submit">Fetch Assignments</button>
+            </form>
+        </main>
+        <footer>
+            <p> Created by [Alejandro Barragan Solis, Carson King, Brian Goins, Aidan Meshberg, Ashlee Paradis] - 3/1/2025</p>
+        </footer>
+    </div>
+</body>
+</html>
+
