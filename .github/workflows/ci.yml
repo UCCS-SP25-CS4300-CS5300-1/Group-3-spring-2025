@@ -20,31 +20,30 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      #  (A) Get the diff of changes
+      # (A) Get the diff of changes
       - name: Get PR diff
         id: diff
         run: |
-          # This exports the diff to a file or environment variable.
           git fetch origin main
           DIFF=$(git diff origin/main...HEAD)
           echo "diff<<EOF" >> $GITHUB_OUTPUT
           echo "$DIFF" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      #  (B) Call OpenAI API with the diff
+      # (B) Set up OpenAI API key from GitHub Secrets
+      - name: Set up OpenAI API key
+        run: |
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> $GITHUB_ENV
+
+      # (C) Install OpenAI Python client
+      - name: Install OpenAI Python client
+        run: |
+          pip install openai
+
+      # (D) Call OpenAI API with the diff (Python script)
       - name: AI Code Review
         run: |
-          echo "Performing AI code review..."
-          # Example: We echo the diff to illustrate. In reality, you'd call the OpenAI API here
-          # using a script or custom action that passes the ${{ steps.diff.outputs.diff }}.
-          # For instance, a Python script or a custom GitHub Action.
-
-          # Example pseudo-code:
-          # pip install openai
-          # python review_script.py "${{ steps.diff.outputs.diff }}"
-
-      #  (C) Post the AI feedback to PR (Optional)
-      #  You can use the GitHub CLI or a custom approach to comment on the PR with the AI's response.
+          python scripts/review_script.py "${{ steps.diff.outputs.diff }}"
 
   ################################################################
   # 2. Automated Tests + Coverage

@@ -5,7 +5,7 @@ import sys
 # Example usage: python review_script.py "DIFF_CONTENT_HERE"
 if __name__ == "__main__":
     openai.api_key = os.getenv("OPENAI_API_KEY")
-    diff_content = sys.argv[0]  # The diff passed from the CI job
+    diff_content = sys.argv[1]  # The diff passed from the CI job
 
     # Basic prompt to OpenAI
     prompt = f"Perform a code review on the following diff:\n{diff_content}"
@@ -19,4 +19,4 @@ if __name__ == "__main__":
     )
 
     # Print the response
-    print(response.choices[0].message.content)
+    print(response['choices'][0]['message']['content'])
