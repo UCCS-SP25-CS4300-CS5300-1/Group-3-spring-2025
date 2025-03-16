@@ -34,7 +34,7 @@ SECRET_KEY = 'django-insecure-@+yu7z2i^)0&wfn)iafs!*3&r^z_af@)hme0%le$itmaj*ok%v
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['app-abarrag4-5.devedu.io', 'editor-ashleeparadis-5.devedu.io', 'app-ashleeparadis-5.devedu.io','app-carsoncontainer-5.devedu.io' ]
+ALLOWED_HOSTS = ['app-abarrag4-5.devedu.io', 'editor-ashleeparadis-5.devedu.io', 'app-ashleeparadis-5.devedu.io','app-carsoncontainer-5.devedu.io','app-bgoins-5.devedu.io' ]
 
 
 # Application definition
@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'home',
+    'taggit',
+    'notepage',
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
@@ -111,7 +113,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 CSRF_TRUSTED_ORIGINS = [
-    "https://app-carsoncontainer-5.devedu.io",
+    "https://app-carsoncontainer-5.devedu.io","https://app-bgoins-5.devedu.io",
 ]
 
 

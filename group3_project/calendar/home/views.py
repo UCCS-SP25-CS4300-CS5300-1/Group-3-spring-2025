@@ -19,13 +19,13 @@ def clear_calendar(request):
     return redirect('calendar_view')
 
 def index(request):
-    return render(request, 'index.html')
+    return render(request, 'home/index.html')
     
 #Calendar view
 def calendar_view(request):
     events = list(Event.objects.all().values("course_name", "title", "event_type", "due_date"))
     events_json = json.dumps(events, cls=DjangoJSONEncoder)
-    return render(request, "calendar.html", {"events_json": events_json})
+    return render(request, "home/calendar.html", {"events_json": events_json})
 
 #Reuse the parse_date function Canvass Integration Script
 def parse_date(date_str):

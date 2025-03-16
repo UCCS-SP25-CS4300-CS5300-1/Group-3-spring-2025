@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from .views import index, fetch_assignments, calendar_view, clear_calendar
 
 urlpatterns = [
