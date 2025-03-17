@@ -1,7 +1,7 @@
 #views.py
 from django.shortcuts import render, redirect
 from django.contrib import messages
-#import requests
+import requests
 from django.http import HttpResponse
 from datetime import datetime
 from .models import Event
