@@ -25,10 +25,16 @@ jobs:
         id: diff
         run: |
           git fetch origin main
-          DIFF=$(git diff origin/main...HEAD)
+          MERGE_BASE=$(git merge-base origin/main HEAD || true)
+          if [ -z "$MERGE_BASE" ]; then
+            DIFF=$(git diff origin/main HEAD)
+          else
+            DIFF=$(git diff $MERGE_BASE HEAD)
+          fi
           echo "diff<<EOF" >> $GITHUB_OUTPUT
           echo "$DIFF" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+
 
       # (B) Set up OpenAI API key from GitHub Secrets
       - name: Set up OpenAI API key
