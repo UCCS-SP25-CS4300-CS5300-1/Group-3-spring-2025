@@ -1,12 +1,14 @@
-
 import os
-import openai
+from openai import OpenAI
 import sys
 
-# Example usage: python review_script.py "DIFF_CONTENT_HERE"
 if __name__ == "__main__":
-    openai.api_key = os.getenv("OPENAI_API_KEY")
-    diff_content = sys.argv[1]  # The diff passed from the CI job
+
+    #initialize the OpenAI client
+    client = OpenAI(
+        api_key=os.environ.get("OPENAI_API_KEY"),
+    )
+    diff_content = sys.argv[1]  #The diff passed from the CI job
 
     # Filter problematic Django template and JavaScript from the prompt
     filtered_lines = []
@@ -19,16 +21,16 @@ if __name__ == "__main__":
     
     filtered_diff = "\n".join(filtered_lines)
 
-    # Basic prompt to OpenAI
+    #the prompt for the code review
     prompt = f"Perform a code review on the following diff:\n{filtered_lines}"
 
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "You are a helpful code review assistant."},
-            {"role": "user", "content": prompt}
-        ]
+    #call the API endpoint (client.responses.create)
+    response = client.responses.create(
+        model="gpt-4o",
+        instructions="You are a helpful code review assistant.",
+        input=prompt,
     )
 
-    # Print the response
-    print(response['choices'][0]['message']['content'])
+
+    #print the output from the AI
+    print(response.output_text)
