@@ -11,8 +11,8 @@ if __name__ == "__main__":
     # Basic prompt to OpenAI
     prompt = f"Perform a code review on the following diff:\n{diff_content}"
 
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+    response = client.responses.create(
+        model="gpt-4o",
         messages=[
             {"role": "system", "content": "You are a helpful code review assistant."},
             {"role": "user", "content": prompt}
