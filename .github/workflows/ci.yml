@@ -36,6 +36,7 @@ jobs:
           fi
           # "Escape" possibly problematic characters - double quotes, single quotes, non ASCII characters.
           ESCAPED_DIFF=$(echo "$DIFF" | sed 's/"/\\"/g' | sed "s/'/\\'/g" | sed 's/([^\x00-\x7F])//g')
+          echo "ESCAPED_DIFF=$ESCAPED_DIFF"
           echo "diff<<EOF" >> $GITHUB_OUTPUT
           echo "$ESCAPED_DIFF" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
