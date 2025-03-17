@@ -1,10 +1,9 @@
 name: CI Pipeline
 
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
+    types: [opened, synchronize, reopened]
+
 
 jobs:
   ################################################################
@@ -16,6 +15,10 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
 
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -25,10 +28,21 @@ jobs:
         id: diff
         run: |
           git fetch origin main
-          DIFF=$(git diff origin/main...HEAD)
+          MERGE_BASE=$(git merge-base origin/main HEAD || true)
+          if [ -z "$MERGE_BASE" ]; then
+            DIFF=$(git diff origin/main HEAD)
+          else
+            DIFF=$(git diff $MERGE_BASE HEAD)
+          fi
+          # Filter out files to only look at what is in the project, and purge .pyc files
+          FILTERED_DIFF=$(echo "$DIFF" | grep "^diff --git a/$group3_project/calendar" | grep -v ".pyc")
+          # "Escape" possibly problematic characters - double quotes, single quotes, non ASCII characters.
+          ESCAPED_DIFF=$(echo "$FILTERED_DIFF" | sed 's/"/\\"/g' | sed "s/'/\\'/g" | sed 's/([^\x00-\x7F])//g')
+          echo "ESCAPED_DIFF=$ESCAPED_DIFF"
           echo "diff<<EOF" >> $GITHUB_OUTPUT
-          echo "$DIFF" >> $GITHUB_OUTPUT
+          echo "$ESCAPED_DIFF" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+
 
       # (B) Set up OpenAI API key from GitHub Secrets
       - name: Set up OpenAI API key
@@ -43,7 +57,7 @@ jobs:
       # (D) Call OpenAI API with the diff (Python script)
       - name: AI Code Review
         run: |
-          python scripts/review_script.py "${{ steps.diff.outputs.diff }}"
+          python group3_project/calendar/scripts/review_script.py "${{ steps.diff.outputs.diff }}"
 
   ################################################################
   # 2. Automated Tests + Coverage
@@ -66,9 +80,12 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
           # Make sure coverage is in your requirements.txt or install explicitly:
-          # pip install coverage
+
+      - name: Set up Django env
+        run: |
+          source group3_project/bin/activate
 
       - name: Run tests with coverage
         run: |
-          coverage run manage.py test
+          coverage run group3_project/calendar/manage.py test
           coverage report -m
