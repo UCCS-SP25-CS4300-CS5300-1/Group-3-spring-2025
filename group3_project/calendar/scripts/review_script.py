@@ -8,6 +8,11 @@ if __name__ == "__main__":
     openai.api_key = os.getenv("OPENAI_API_KEY")
     diff_content = sys.argv[1]  # The diff passed from the CI job
 
+    client = OpenAI(
+    # This is the default and can be omitted
+    api_key=os.environ.get("OPENAI_API_KEY"),
+    )
+
     # Basic prompt to OpenAI
     prompt = f"Perform a code review on the following diff:\n{diff_content}"
 
