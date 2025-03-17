@@ -48,7 +48,7 @@ jobs:
       # (D) Call OpenAI API with the diff (Python script)
       - name: AI Code Review
         run: |
-          python scripts/review_script.py "${{ steps.diff.outputs.diff }}"
+          python group3_project/calendar/scripts/review_script.py "${{ steps.diff.outputs.diff }}"
 
   ################################################################
   # 2. Automated Tests + Coverage
