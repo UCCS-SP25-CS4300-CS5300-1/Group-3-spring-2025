@@ -1,28 +1,23 @@
-
 import os
-import openai
+from openai import OpenAI
 import sys
 
-# Example usage: python review_script.py "DIFF_CONTENT_HERE"
 if __name__ == "__main__":
-    openai.api_key = os.getenv("OPENAI_API_KEY")
+    # Initialize the OpenAI client using the new API interface
+    client = OpenAI(
+        api_key=os.environ.get("OPENAI_API_KEY"),
+    )
     diff_content = sys.argv[1]  # The diff passed from the CI job
 
-    client = openai(
-    # This is the default and can be omitted
-    api_key=os.environ.get("OPENAI_API_KEY"),
-    )
-
-    # Basic prompt to OpenAI
+    # Build the prompt for the code review
     prompt = f"Perform a code review on the following diff:\n{diff_content}"
 
+    # Call the new API endpoint (client.responses.create) with updated parameters
     response = client.responses.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "You are a helpful code review assistant."},
-            {"role": "user", "content": prompt}
-        ]
+        model="gpt-4o",  # Using the model specified in the README (change if needed)
+        instructions="You are a helpful code review assistant.",
+        input=prompt,
     )
 
-    # Print the response
-    print(response['choices'][0]['message']['content'])
+    # Print the output from the AI
+    print(response.output_text)
