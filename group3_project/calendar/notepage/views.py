@@ -62,8 +62,6 @@ def edit_note(request, pk):
 
     return render(request, 'notepage/note_form.html', {'form': form, 'note': note, 'action': 'Edit'})
 
-
-
 def delete_note(request, pk):
     note = get_object_or_404(Note, pk=pk)
     
