@@ -73,6 +73,10 @@ jobs:
           # pip install -r requirements.txt
           # Make sure coverage is in your requirements.txt or install explicitly:
 
+      - name: Set up Django env
+        run: |
+          source group3_project/bin/activate
+
       - name: Run tests with coverage
         run: |
           coverage run group3_project/calendar/manage.py test
