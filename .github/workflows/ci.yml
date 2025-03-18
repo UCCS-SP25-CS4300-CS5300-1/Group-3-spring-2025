@@ -30,18 +30,17 @@ jobs:
           git fetch origin main
           MERGE_BASE=$(git merge-base origin/main HEAD || true)
           if [ -z "$MERGE_BASE" ]; then
-            DIFF=$(git diff origin/main HEAD)
+            DIFF=$(git diff origin/main HEAD -- group3_project/calendar)
           else
-            DIFF=$(git diff $MERGE_BASE HEAD)
+            DIFF=$(git diff $MERGE_BASE HEAD -- group3_project/calendar)
           fi
-          # Filter out files to only look at what is in the project, and purge .pyc files
-          FILTERED_DIFF=$(echo "$DIFF" | grep "^diff --git a/$group3_project/calendar" | grep -v ".pyc")
-          # "Escape" possibly problematic characters - double quotes, single quotes, non ASCII characters.
-          ESCAPED_DIFF=$(echo "$FILTERED_DIFF" | sed 's/"/\\"/g' | sed "s/'/\\'/g" | sed 's/([^\x00-\x7F])//g')
+          # "Escape" possibly problematic characters - double quotes, single quotes, non-ASCII characters.
+          ESCAPED_DIFF=$(echo "$DIFF" | sed 's/"/\\"/g' | sed "s/'/\\'/g" | sed 's/([^\x00-\x7F])//g')
           echo "ESCAPED_DIFF=$ESCAPED_DIFF"
           echo "diff<<EOF" >> $GITHUB_OUTPUT
           echo "$ESCAPED_DIFF" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+
 
 
       # (B) Set up OpenAI API key from GitHub Secrets
