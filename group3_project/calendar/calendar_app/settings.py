@@ -113,7 +113,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 CSRF_TRUSTED_ORIGINS = [
-    "https://app-carsoncontainer-5.devedu.io","https://app-bgoins-5.devedu.io","https://calendai.up.railway.app/",
+    "https://app-carsoncontainer-5.devedu.io","https://app-bgoins-5.devedu.io","https://calendai.up.railway.app/","http://calendai.up.railway.app/",
 ]
 
 
