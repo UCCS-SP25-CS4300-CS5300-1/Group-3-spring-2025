@@ -14,7 +14,11 @@
             <h1>Calendai</h1>
         </header>
         <main>
-            <p>This homepage is so cool</p>
+            <h3>How to use Calendai?</h3>
+            <p>First, sign into Canvas, then copy the URL you get into the first box below. </p>
+            <p>Second, go to Canvas -> Account -> Settings -> Approved Integrations</p>
+            <p>Generate a new Access Token, then copy the token into the second box below.</p>
+            <p>Congratulations! You can now use Calendai.</p>
             <!-- Canvas Credentials Form -->
             <form method="post" action="{% url 'fetch_assignments' %}">
                 {% csrf_token %}
@@ -30,7 +34,7 @@
             </form>
         </main>
         <footer>
-            <p> Created by [Alejandro Barragan Solis, Carson King, Brian Goins, Aidan Meshberg, Ashlee Paradis] - 3/1/2025</p>
+            <p> Created by [Alejandro Barragan Solis, Carson King, Brian Goins, Aidan Meshberg, Ashlee Paradis] - Last Updated 3/18/2025</p>
         </footer>
     </div>
 </body>
