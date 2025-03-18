@@ -6,6 +6,8 @@ from .models import Note
 from .forms import NoteForm
 from taggit.models import Tag
 import json
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 
 @csrf_exempt
 def note_list(request):

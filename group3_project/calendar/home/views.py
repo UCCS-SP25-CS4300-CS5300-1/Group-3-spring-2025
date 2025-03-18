@@ -8,6 +8,8 @@ from .models import Event
 from django.shortcuts import render
 import json
 from django.core.serializers.json import DjangoJSONEncoder
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 
 #Clear button view
 @csrf_exempt
