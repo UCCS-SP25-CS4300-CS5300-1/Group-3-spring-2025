@@ -15,6 +15,10 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
 
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -33,7 +37,6 @@ jobs:
           echo "diff<<EOF" >> $GITHUB_OUTPUT
           echo "$DIFF" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-
 
       # (B) Set up OpenAI API key from GitHub Secrets
       - name: Set up OpenAI API key
