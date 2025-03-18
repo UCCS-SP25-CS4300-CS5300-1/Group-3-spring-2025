@@ -41,8 +41,6 @@ jobs:
           echo "$ESCAPED_DIFF" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-
-
       # (B) Set up OpenAI API key from GitHub Secrets
       - name: Set up OpenAI API key
         run: |
