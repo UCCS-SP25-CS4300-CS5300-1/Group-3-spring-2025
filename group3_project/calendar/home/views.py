@@ -10,6 +10,7 @@ import json
 from django.core.serializers.json import DjangoJSONEncoder
 
 #Clear button view
+@csrf_exempt
 def clear_calendar(request):
     if request.method == "POST":
         Event.objects.all().delete()
@@ -19,16 +20,19 @@ def clear_calendar(request):
     #Redirect back to your calendar view.
     return redirect('calendar_view')
 
+@csrf_exempt
 def index(request):
     return render(request, 'home/index.html')
     
 #Calendar view
+@csrf_exempt
 def calendar_view(request):
     events = list(Event.objects.all().values("course_name", "title", "event_type", "due_date"))
     events_json = json.dumps(events, cls=DjangoJSONEncoder)
     return render(request, "home/calendar.html", {"events_json": events_json})
 
 #Reuse the parse_date function Canvass Integration Script
+@csrf_exempt
 def parse_date(date_str):
     if not date_str:
         return None
@@ -40,6 +44,7 @@ def parse_date(date_str):
         return None
 
 #Gets a list of the user's active courses from Canvas.
+@csrf_exempt
 def get_active_courses(canvas_url, api_token):
     courses_endpoint = f"{canvas_url}/api/v1/courses?enrollment_state=active&per_page=100"
     headers = {"Authorization": f"Bearer {api_token}"}
@@ -51,6 +56,7 @@ def get_active_courses(canvas_url, api_token):
     return response.json()
 
 #Gets all assignments for a given course.
+@csrf_exempt
 def get_assignments_for_course(canvas_url, course_id, api_token):
     assignments_endpoint = f"{canvas_url}/api/v1/courses/{course_id}/assignments?per_page=100"
     headers = {"Authorization": f"Bearer {api_token}"}
@@ -64,6 +70,7 @@ def get_assignments_for_course(canvas_url, course_id, api_token):
     return response.json()
 
 #The view that handles the form submission and fetches assignments.
+@csrf_exempt
 def fetch_assignments(request):
     if request.method == "POST":
         #Gets the credentials from the submitted form.

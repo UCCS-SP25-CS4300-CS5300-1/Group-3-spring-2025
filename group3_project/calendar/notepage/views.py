@@ -7,6 +7,7 @@ from .forms import NoteForm
 from taggit.models import Tag
 import json
 
+@csrf_exempt
 def note_list(request):
     tags = Tag.objects.all()
     search_query = request.GET.get('search', '')
@@ -23,6 +24,7 @@ def note_list(request):
     
     return render(request, 'notepage/note_list.html', {'notes': notes, 'tags': tags})
 
+@csrf_exempt
 def create_note(request):
     if request.method == 'POST':
         form = NoteForm(request.POST)
@@ -40,11 +42,12 @@ def create_note(request):
     
     return render(request, 'notepage/note_form.html', {'form': form, 'action': 'Create'})
 
-
+@csrf_exempt
 def note_detail(request, pk):
     note = get_object_or_404(Note, pk=pk)
     return render(request, 'notepage/note_detail.html', {'note': note})
 
+@csrf_exempt
 def edit_note(request, pk):
     note = get_object_or_404(Note, pk=pk)
 
@@ -62,6 +65,7 @@ def edit_note(request, pk):
 
     return render(request, 'notepage/note_form.html', {'form': form, 'note': note, 'action': 'Edit'})
 
+@csrf_exempt
 def delete_note(request, pk):
     note = get_object_or_404(Note, pk=pk)
     
@@ -71,6 +75,7 @@ def delete_note(request, pk):
     
     return render(request, 'notepage/note_confirm_delete.html', {'note': note})
 
+@csrf_exempt
 def autosave_note(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -91,6 +96,7 @@ def autosave_note(request):
     
     return JsonResponse({'success': False})
 
+@csrf_exempt
 def delete_tags(request):
     if request.method == 'POST':
         notes = Note.objects.all()
