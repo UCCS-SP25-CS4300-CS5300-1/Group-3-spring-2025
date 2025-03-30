@@ -82,5 +82,6 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          coverage run group3_project/calendar/manage.py test
+          cd group3_project/calendar
+          coverage run manage.py test
           coverage report -m
