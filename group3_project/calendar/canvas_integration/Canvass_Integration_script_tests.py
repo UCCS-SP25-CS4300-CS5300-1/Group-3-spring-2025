@@ -2,7 +2,7 @@ import sys
 import pytest
 from datetime import datetime
 import requests
-from Canvass_Integration import parse_date, get_canvas_url, get_api_token, get_active_courses, get_assignments_for_course
+from .Canvass_Integration import parse_date, get_canvas_url, get_api_token, get_active_courses, get_assignments_for_course
 
 
 #Tests for parse_date
@@ -53,7 +53,6 @@ def test_get_api_token_empty(monkeypatch):
         get_api_token()
 
 #Helpers for simulating requests responses
-
 class DummyResponse:
     def __init__(self, json_data, status_code=200):
         self._json = json_data
@@ -65,6 +64,7 @@ class DummyResponse:
     def raise_for_status(self):
         if self.status_code != 200:
             raise requests.HTTPError("HTTP Error")
+
 
 def dummy_requests_get_success(url, headers):
     #Return dummy data based on the URL pattern.

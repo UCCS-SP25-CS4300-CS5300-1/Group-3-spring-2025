@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
 from datetime import datetime, timedelta
-from home.models import Event
+from .models import Event
 
 #
 class CalendarViewTests(TestCase):
