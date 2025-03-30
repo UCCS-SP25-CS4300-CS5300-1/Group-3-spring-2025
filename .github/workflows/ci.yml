@@ -35,7 +35,7 @@ jobs:
             DIFF=$(git diff $MERGE_BASE HEAD)
           fi
           
-        # Encoding diff output with base64 to test js
+        
           ENCODED_DIFF=$(echo "$DIFF" | base64 -w 0)
           echo "diff=$ENCODED_DIFF" >> $GITHUB_OUTPUT
 
