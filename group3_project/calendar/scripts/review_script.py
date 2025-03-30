@@ -10,7 +10,8 @@ if __name__ == "__main__":
         client = OpenAI(
             api_key=os.environ.get("OPENAI_API_KEY"),
         )
-        diff_content = sys.argv[1]  # The diff passed from the CI job
+        encoded_diff = sys.argv[1]
+        diff_content = base64.b64decode(encoded_diff).decode('utf-8')
 
         # Filter problematic Django template and JavaScript from the prompt
         filtered_lines = []
