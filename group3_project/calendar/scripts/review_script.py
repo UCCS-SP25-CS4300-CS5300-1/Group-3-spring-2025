@@ -2,6 +2,7 @@ import os
 from openai import OpenAI
 import sys
 import traceback
+import base64
 
 if __name__ == "__main__":
 
