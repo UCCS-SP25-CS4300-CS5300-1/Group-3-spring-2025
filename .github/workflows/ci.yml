@@ -34,9 +34,10 @@ jobs:
           else
             DIFF=$(git diff $MERGE_BASE HEAD)
           fi
-          echo "diff<<EOF" >> $GITHUB_OUTPUT
-          echo "$DIFF" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          
+        
+          ENCODED_DIFF=$(echo "$DIFF" | base64 -w 0)
+          echo "diff=$ENCODED_DIFF" >> $GITHUB_OUTPUT
 
       # (B) Set up OpenAI API key from GitHub Secrets
       - name: Set up OpenAI API key
@@ -81,5 +82,6 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          coverage run group3_project/calendar/manage.py test
+          cd group3_project/calendar
+          coverage run manage.py test
           coverage report -m
