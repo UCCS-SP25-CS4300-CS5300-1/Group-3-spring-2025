@@ -1,0 +1,20 @@
+<!-- templates/home/modules.html -->
+{% extends "home/base.html" %}
+{% block title %}Modules - Calendai{% endblock %}
+{% block content %}
+<div class="container">
+  <h2>Modules</h2>
+  {% if modules %}
+    <ul class="list-group">
+      {% for module in modules %}
+        <li class="list-group-item">
+          <strong>{{ module.title }}</strong> - {{ module.course_name }}<br>
+          <small>{{ module.description }}</small>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No modules available.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -2,13 +2,13 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 import requests
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
+from django.shortcuts import get_object_or_404
 from datetime import datetime
-from .models import Event
+from .models import Event, Module, ModuleItem
 from django.shortcuts import render
 import json
 from django.core.serializers.json import DjangoJSONEncoder
-from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
 #Clear button view
@@ -19,7 +19,7 @@ def clear_calendar(request):
         messages.success(request, "All events have been cleared.")
     else:
         messages.error(request, "Invalid request.")
-    #Redirect back to your calendar view.
+    #Redirect back to calendar view.
     return redirect('calendar_view')
 
 @csrf_exempt
@@ -71,11 +71,10 @@ def get_assignments_for_course(canvas_url, course_id, api_token):
         return []
     return response.json()
 
-#The view that handles the form submission and fetches assignments.
+#The view that handles the form submission and fetches assignments and modules.
 @csrf_exempt
 def fetch_assignments(request):
     if request.method == "POST":
-        #Gets the credentials from the submitted form.
         canvas_url = request.POST.get('canvas_url')
         api_token = request.POST.get('api_token')
 
@@ -91,29 +90,68 @@ def fetch_assignments(request):
 
         current_year = datetime.now().year
         assignments_count = 0
+        modules_count = 0
 
-        #Loop through courses and then assignments for each course.
         for course in courses:
             course_id = course.get("id")
             course_name = course.get("name", "Unknown Course")
+            
+            #Fetch and store assignments
             assignments = get_assignments_for_course(canvas_url, course_id, api_token)
             for assignment in assignments:
                 assignment_name = assignment.get("name", "Untitled Assignment")
                 due_at = assignment.get("due_at")
                 assignment_due = parse_date(due_at) if due_at else None
 
-                #Only add assignments with a due date in the current year.
                 if assignment_due and assignment_due.year == current_year:
                     Event.objects.create(
-                    title=assignment_name,
-                    description=assignment.get("description") or "",
-                    due_date=assignment_due,
-                    event_type="assignment",  # treating all as generic events
-                    course_name=course_name
+                        title=assignment_name,
+                        description=assignment.get("description") or "",
+                        due_date=assignment_due,
+                        event_type="assignment",
+                        course_name=course_name
                     )
                     assignments_count += 1
-
-        messages.success(request, f"Fetched and added {assignments_count} assignment(s) to the calendar.")
-        #Redirect to the calendar view (update URL name as needed)
+        messages.success(
+            request,
+            f"Fetched and added {assignments_count} assignment(s) to the calendar."
+        )
         return redirect('calendar_view')
     return redirect('index')
+
+@csrf_exempt
+def get_modules_for_course(canvas_url, course_id, api_token):
+    modules_endpoint = f"{canvas_url}/api/v1/courses/{course_id}/modules?per_page=100"
+    headers = {"Authorization": f"Bearer {api_token}"}
+    try:
+        response = requests.get(modules_endpoint, headers=headers)
+        response.raise_for_status()
+    except requests.RequestException as e:
+        print(f"Error fetching modules for course {course_id}: {e}")
+        return []
+    return response.json()
+
+#Course list view
+@csrf_exempt
+def courses_list(request):
+    courses = Module.objects.values_list('course_name', flat=True).distinct()
+    return render(request, "home/courses_list.html", {"courses": courses})
+
+#Course details view
+@csrf_exempt
+def course_detail(request, course_name):
+    assignments = Event.objects.filter(course_name=course_name, event_type="assignment").order_by('due_date')
+    modules = Module.objects.filter(course_name=course_name)
+    return render(request, "home/course_detail.html", {
+        "course_name": course_name,
+        "assignments": assignments,
+        "modules": modules,
+    })
+from django.shortcuts import get_object_or_404
+
+#Assignment Details View
+@csrf_exempt
+def assignment_detail(request, assignment_id):
+    assignment = get_object_or_404(Event, pk=assignment_id)
+    return render(request, "home/assignment_detail.html", {"assignment": assignment})
+

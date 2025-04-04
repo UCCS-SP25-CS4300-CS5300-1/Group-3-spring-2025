@@ -1,0 +1,18 @@
+<!-- templates/home/assignment_detail.html -->
+{% extends "home/base.html" %}
+{% block title %}{{ assignment.title }} - Details{% endblock %}
+{% block content %}
+<div class="container">
+  <h2>{{ assignment.title }}</h2>
+  <p><strong>Due Date:</strong> {{ assignment.due_date|date:"M d, Y" }}</p>
+  <div>
+    <h4>Description</h4>
+    {% if assignment.description %}
+      <p>{{ assignment.description|safe }}</p>
+    {% else %}
+      <p>No description available.</p>
+    {% endif %}
+  </div>
+  <a href="javascript:history.back()" class="btn btn-secondary">Go Back</a>
+</div>
+{% endblock %}
