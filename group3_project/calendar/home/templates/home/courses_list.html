@@ -1,0 +1,17 @@
+<!-- templates/home/courses_list.html -->
+{% extends "home/base.html" %}
+{% block title %}Courses - Calendai{% endblock %}
+{% block content %}
+<div class="container">
+  <h2>Courses</h2>
+  <ul class="list-group">
+    {% for course in courses %}
+      <li class="list-group-item">
+        <a href="{% url 'course_detail' course %}">{{ course }}</a>
+      </li>
+    {% empty %}
+      <li class="list-group-item">No courses available.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

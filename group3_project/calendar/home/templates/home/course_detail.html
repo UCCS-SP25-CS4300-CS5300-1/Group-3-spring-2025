@@ -1,0 +1,37 @@
+{% extends "home/base.html" %}
+{% block title %}{{ course_name }} - Details{% endblock %}
+{% block content %}
+<div class="container">
+  <h2>{{ course_name }}</h2>
+
+  <!-- Nav tabs -->
+  <ul class="nav nav-tabs">
+    <li class="nav-item">
+      <a class="nav-link active" data-bs-toggle="tab" href="#assignments">Assignments</a>
+    </li>
+  </ul>
+
+  <!-- Tab pane for assignments only -->
+  <div class="tab-content pt-3">
+    <div id="assignments" class="tab-pane fade show active">
+      {% if assignments %}
+        <ul class="list-group">
+          {% for assignment in assignments %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <a href="{% url 'assignment_detail' assignment.id %}">
+                {{ assignment.title }}
+              </a>
+              <span class="badge bg-primary">
+                Due {{ assignment.due_date|date:"M d, Y" }}
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No assignments available for this course.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
