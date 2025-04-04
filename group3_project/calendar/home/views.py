@@ -155,6 +155,7 @@ def assignment_detail(request, assignment_id):
     assignment = get_object_or_404(Event, pk=assignment_id)
     return render(request, "home/assignment_detail.html", {"assignment": assignment})
 
+<<<<<<< HEAD
 #Module wipe button
 @csrf_exempt
 def wipe_saved(request):
@@ -170,3 +171,5 @@ def wipe_saved(request):
         messages.error(request, "Invalid request.")
     return redirect('calendar_view')
 
+=======
+>>>>>>> a53e999 (Updated tests and added modules)
