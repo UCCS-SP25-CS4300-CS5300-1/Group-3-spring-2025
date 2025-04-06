@@ -155,3 +155,18 @@ def assignment_detail(request, assignment_id):
     assignment = get_object_or_404(Event, pk=assignment_id)
     return render(request, "home/assignment_detail.html", {"assignment": assignment})
 
+#Module wipe button
+@csrf_exempt
+def wipe_saved(request):
+    if request.method == "POST":
+        #Clears all Calendar events
+        Event.objects.all().delete()
+        #Clears all modules
+        Module.objects.all().delete()
+        #Clears module items if needed
+        ModuleItem.objects.all().delete()
+        messages.success(request, "All saved events and modules have been wiped.")
+    else:
+        messages.error(request, "Invalid request.")
+    return redirect('calendar_view')
+
