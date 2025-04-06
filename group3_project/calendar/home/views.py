@@ -156,6 +156,9 @@ def assignment_detail(request, assignment_id):
     return render(request, "home/assignment_detail.html", {"assignment": assignment})
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 41308aa (Added a full clear button)
 #Module wipe button
 @csrf_exempt
 def wipe_saved(request):
@@ -171,5 +174,8 @@ def wipe_saved(request):
         messages.error(request, "Invalid request.")
     return redirect('calendar_view')
 
+<<<<<<< HEAD
 =======
 >>>>>>> a53e999 (Updated tests and added modules)
+=======
+>>>>>>> 41308aa (Added a full clear button)
