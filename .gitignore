@@ -1,14 +1,26 @@
-# Ignore everything
+# Ignore everything by default
 *
 
-# But don't ignore .gitignore and README if you have one
+# Keep key project files 
 !.gitignore
 !README.md
-
-# Don't ignore the calendar folder and everything inside it
-!calendar/
-!calendar/**
-
-# (Optional) Keep requirements.txt and manage.py tracked
-!requirements.txt
 !manage.py
+!requirements.txt
+
+# Keep Django project/app code
+!group3_project/
+!group3_project/**
+
+# Keep GitHub Actions pipeline
+!.github/
+!.github/**
+
+# Ignore build/venv/system junk
+group3_project/bin/
+group3_project/lib/
+group3_project/lib64/
+group3_project/.pytest_cache/
+__pycache__/
+*.pyc
+.env
+db.sqlite3

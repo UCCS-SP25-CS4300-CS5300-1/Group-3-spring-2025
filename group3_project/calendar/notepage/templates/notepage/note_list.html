@@ -1,0 +1,72 @@
+{% extends 'notepage/note_base.html' %}
+
+{% block title %}My Notes{% endblock %}
+
+{% block content %}
+    <h1>My Notes</h1>
+    
+    <div class="row mt-4">
+        {% for note in notes %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card note-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ note.title }}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">{{ note.updated_at|date:"M d, Y" }}</h6>
+                        <p class="card-text">{{ note.content|truncatechars:100 }}</p>
+                        <div class="mb-2">
+                            {% for tag in note.tags.all %}
+                                <span class="tag-badge">{{ tag.name }}</span>
+                            {% endfor %}
+                        </div>
+                        <a href="{% url 'note_detail' note.pk %}" class="btn btn-sm btn-primary">View</a>
+                        <a href="{% url 'edit_note' note.pk %}" class="btn btn-sm btn-secondary">Edit</a>
+                        <a href="{% url 'delete_note' note.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    You don't have any notes yet, or this tag no longer has any notes. <a href="{% url 'create_note' %}">Create one now!</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const cards = document.querySelectorAll(".note-card");
+        
+            cards.forEach(card => {
+                const detailLink = card.querySelector("a.btn-primary");
+                const noteId = detailLink.href.split("/").filter(Boolean).pop();
+        
+                const summaryDiv = document.createElement("div");
+                summaryDiv.classList.add("note-summary", "text-muted", "mt-2");
+                summaryDiv.innerText = "Loading summary...";
+                card.querySelector(".card-body").appendChild(summaryDiv);
+        
+                fetch(`/notepage/api/notes/${noteId}/content/`)
+                    .then(res => res.json())
+                    .then(data => {
+                        return fetch('/notepage/api/summarize/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}',
+                            },
+                            body: JSON.stringify({ content: data.content })
+                        });
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        summaryDiv.innerText = "Summary: " + data.summary;
+                    })
+                    .catch(error => {
+                        console.error("Error loading summary:", error);
+                        summaryDiv.innerText = "Could not load summary.";
+                    });
+            });
+        });
+        </script>
+        
+{% endblock %}

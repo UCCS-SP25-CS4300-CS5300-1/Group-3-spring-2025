@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Your Notes{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-tagsinput/0.8.0/bootstrap-tagsinput.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/simplemde/1.11.2/simplemde.min.css">
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 170px;
+            background-color: #3b6fe7;
+            color: white;
+            padding: 20px;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .sidebar h2 {
+            margin: 0 0 20px;
+            font-size: 24px;
+        }
+
+        .sidebar a {
+            color: white;
+            display: block;
+            padding: 12px;
+            text-decoration: none;
+            width: 100%;
+            text-align: center;
+            border-radius: 5px;
+            transition: background 0.1s ease;
+        }
+
+        .sidebar a:hover {
+            background-color: #79a0fc;
+        }
+
+        .main-container {
+            margin-left: 170px;
+            margin-right: 220px;
+            width: calc(100% - 390px);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .top-navbar {
+            background-color: #0d6efd;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 20px;
+        }
+
+        .content {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .tags-sidebar {
+            width: 220px;
+            background-color: #f8f9fa;
+            padding: 20px;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            right: 0;
+            overflow-y: auto;
+            border-left: 1px solid #ddd;
+        }
+
+        .list-group-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>Calendai</h2>
+        <a href="{% url 'index' %}">Home</a>
+        <a href="{% url 'calendar_view' %}">My Calendar</a>
+        <a href="{% url 'note_list' %}">My Notes</a>
+    </div>
+
+    <div class="main-container">
+        
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="{% url 'note_list' %}">Your Notes</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'note_list' %}">All Notes</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'create_note' %}">New Note</a>
+                        </li>
+                    </ul>
+                    <form class="d-flex" action="{% url 'note_list' %}" method="get">
+                        <input class="form-control me-2" type="search" name="search" placeholder="Search notes" aria-label="Search">
+                        <button class="btn btn-outline-light" type="submit">Search</button>
+                    </form>
+                </div>
+            </div>
+        </nav>
+
+        <div class="content">
+            {% block content %}{% endblock %}
+            {% block content_with_sidebar %}{% endblock %}
+        </div>
+
+    </div>
+
+    <div class="tags-sidebar">
+        <h5>Tags</h5>
+        <div class="list-group mt-3">
+            {% for tag in tags %}
+                <a href="{% url 'note_list' %}?tag={{ tag.name }}" class="list-group-item list-group-item-action">
+                    {{ tag.name }}
+                    <span class="badge bg-primary rounded-pill">{{ tag.num_times }}</span>
+                </a>
+            {% empty %}
+                <p class="text-muted">No tags yet</p>
+            {% endfor %}
+        </div>
+        <form method="post" action="{% url 'delete_tags' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-sm mt-2">Clear All Tags</button>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-tagsinput/0.8.0/bootstrap-tagsinput.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simplemde/1.11.2/simplemde.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
