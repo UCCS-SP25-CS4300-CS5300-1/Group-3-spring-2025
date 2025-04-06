@@ -10,6 +10,9 @@ import json
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.decorators import login_required
+
 
 #Clear button view
 @csrf_exempt
@@ -28,8 +31,9 @@ def index(request):
     
 #Calendar view
 @csrf_exempt
+@login_required
 def calendar_view(request):
-    events = list(Event.objects.all().values("course_name", "title", "event_type", "due_date"))
+    events = list(Event.objects.filter(user=request.user).values("course_name", "title", "event_type", "due_date"))
     events_json = json.dumps(events, cls=DjangoJSONEncoder)
     return render(request, "home/calendar.html", {"events_json": events_json})
 
@@ -79,6 +83,10 @@ def fetch_assignments(request):
         canvas_url = request.POST.get('canvas_url')
         api_token = request.POST.get('api_token')
 
+        profile = request.user.userprofile
+        profile.canvas_token = api_token
+        profile.save()
+
         try:
             courses = get_active_courses(canvas_url, api_token)
         except Exception as e:
@@ -105,6 +113,7 @@ def fetch_assignments(request):
                 #Only add assignments with a due date in the current year.
                 if assignment_due and assignment_due.year == current_year:
                     Event.objects.create(
+                    user=request.user,
                     title=assignment_name,
                     description=assignment.get("description") or "",
                     due_date=assignment_due,
@@ -117,3 +126,18 @@ def fetch_assignments(request):
         #Redirect to the calendar view (update URL name as needed)
         return redirect('calendar_view')
     return redirect('index')
+
+#Method to register user
+def register(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('login')  
+    else:
+        form = UserCreationForm()
+    return render(request, 'home/register.html', {'form': form})
+
+@login_required
+def index(request):
+    return render(request, 'home/index.html')
