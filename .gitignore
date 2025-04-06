@@ -1,0 +1,14 @@
+# Ignore everything
+*
+
+# But don't ignore .gitignore and README if you have one
+!.gitignore
+!README.md
+
+# Don't ignore the calendar folder and everything inside it
+!calendar/
+!calendar/**
+
+# (Optional) Keep requirements.txt and manage.py tracked
+!requirements.txt
+!manage.py
