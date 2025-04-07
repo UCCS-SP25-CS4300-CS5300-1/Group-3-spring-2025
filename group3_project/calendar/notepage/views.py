@@ -1,13 +1,15 @@
-# views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.db.models import Q
 from .models import Note
 from .forms import NoteForm
+from .forms import FileImportForm
 from taggit.models import Tag
 import json
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.core.files.uploadedfile import UploadedFile
+import os
 
 @csrf_exempt
 def note_list(request):
@@ -109,3 +111,33 @@ def delete_tags(request):
         Tag.objects.all().delete()
 
         return redirect('note_list')
+
+@csrf_exempt
+def import_file(request):
+    if request.method == 'POST':
+        form = FileImportForm(request.POST, request.FILES)
+        if form.is_valid():
+            uploaded_file = request.FILES['file']
+            
+            filename = os.path.basename(uploaded_file.name)
+            title = os.path.splitext(filename)[0]
+            
+            content = ""
+            if isinstance(uploaded_file, UploadedFile):
+                try:                            # Parseable text file
+                    content = uploaded_file.read().decode('utf-8')
+                except UnicodeDecodeError:      # Unparseable file
+                    content = f"This note was created from file: {filename}\nThe file content could not be displayed as text."
+            
+            note = Note(title=title, content=content)
+            note.save()
+            
+            tags = form.cleaned_data.get('tags')
+            if tags:
+                note.tags.add(*tags.split(','))
+            
+            return redirect('note_detail', pk=note.pk)
+    else:
+        form = FileImportForm()
+    
+    return render(request, 'notepage/import_file.html', {'form': form})
