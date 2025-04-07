@@ -3,8 +3,10 @@
 {% block title %}My Notes{% endblock %}
 
 {% block content %}
+<div class="mb-3 d-flex align-items-center justify-content-between">
     <h1>My Notes</h1>
-    
+    <button id="toggle-summary" class="btn btn-outline-dark btn-sm">Disable AI Summaries</button>
+</div>
     <div class="row mt-4">
         {% for note in notes %}
             <div class="col-md-6 col-lg-4 mb-4">
@@ -32,16 +34,52 @@
             </div>
         {% endfor %}
     </div>
+    <!--This JS script will take the content of each note and send it to OpenAPI and spit back a summary of the notes -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            const toggleBtn = document.getElementById("toggle-summary");
+            const summariesEnabled = localStorage.getItem("summariesEnabled") !== "false"; 
+        
+            // Tis function is simply to change the color of the AI summarization button based on if it is off or on. Blue means on White means off
+            function updateToggleLabel() {
+                const isEnabled = localStorage.getItem("summariesEnabled") !== "false";
+
+                toggleBtn.innerText = isEnabled ? "Disable AI Summaries" : "Enable AI Summaries";
+
+                toggleBtn.classList.remove("btn-outline-primary", "btn-primary");
+                toggleBtn.classList.add(isEnabled ? "btn-primary" : "btn-outline-primary");
+
+                if (isEnabled) {
+                    toggleBtn.classList.add("btn-primary", "text-white");
+                } else {
+                    toggleBtn.classList.add("btn-outline-primary");
+                }
+            }
+        
+            updateToggleLabel();
+        
+            // This will reload the summaries based on if the button is on or not
+            toggleBtn.addEventListener("click", function () {
+                const newSetting = !(localStorage.getItem("summariesEnabled") !== "false");
+                localStorage.setItem("summariesEnabled", newSetting);
+                location.reload(); 
+            });
+        
+            if (!summariesEnabled) return; 
+        
             const cards = document.querySelectorAll(".note-card");
         
+            // This part will take the content of each note page and send it to OpenAPI and spit back a 1-2 sentence summarization
+            // If it cannot summarize the note, it will spit an error
             cards.forEach(card => {
                 const detailLink = card.querySelector("a.btn-primary");
                 const noteId = detailLink.href.split("/").filter(Boolean).pop();
         
                 const summaryDiv = document.createElement("div");
-                summaryDiv.classList.add("note-summary", "text-muted", "mt-2");
+                summaryDiv.classList.add("note-summary", "mt-2");
+                summaryDiv.style.color = "black";
+                summaryDiv.style.fontWeight = "500";
+                summaryDiv.style.lineHeight = "1.4";
                 summaryDiv.innerText = "Loading summary...";
                 card.querySelector(".card-body").appendChild(summaryDiv);
         
@@ -68,5 +106,6 @@
             });
         });
         </script>
+        
         
 {% endblock %}

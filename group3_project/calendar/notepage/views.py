@@ -8,6 +8,7 @@ from taggit.models import Tag
 import json
 from openai import OpenAI
 import os
+from dotenv import load_dotenv
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
@@ -122,7 +123,7 @@ def get_note_content(request, pk):
 
 @csrf_exempt
 def summarize_note(request):
-    
+    load_dotenv()
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     if request.method == 'POST':
         try:
