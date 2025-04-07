@@ -9,4 +9,5 @@ urlpatterns = [
     path('<int:pk>/delete/', views.delete_note, name='delete_note'),
     path('autosave/', views.autosave_note, name='autosave_note'),
     path('deletetags/', views.delete_tags, name='delete_tags'),
+    path('import/', views.import_file, name='import_file'),
 ]

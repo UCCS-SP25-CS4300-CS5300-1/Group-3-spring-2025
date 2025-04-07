@@ -18,3 +18,18 @@ class NoteForm(forms.ModelForm):
                 'data-role': 'tagsinput'
             }),
         }
+
+class FileImportForm(forms.Form):
+    file = forms.FileField(
+        label='Select a file to import',
+        help_text='Maximum file size is 5MB',
+        widget=forms.FileInput(attrs={'class': 'form-control'})
+    )
+    tags = forms.CharField(
+        required=False, 
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Tags (comma separated)',
+            'data-role': 'tagsinput'
+        })
+    )

@@ -1,0 +1,37 @@
+{% extends 'notepage/note_base.html' %}
+
+{% block title %}Import File as Note{% endblock %}
+
+{% block content_with_sidebar %}
+    <div class="col-12 py-4">
+        <h1>Import File as Note</h1>
+        
+        <div class="alert alert-info">
+            <p>Upload a text file to create a new note. The filename will be the note title, and the file contents will be the note content.</p>
+            <p><b>Note:</b> For best results, upload plain text files (.txt, .md, etc.) Other file types can result in formatting issues.</p>
+        </div>
+        
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="{{ form.file.id_for_label }}" class="form-label">File</label>
+                {{ form.file }}
+                <div class="form-text">{{ form.file.help_text }}</div>
+            </div>
+            <div class="mb-3">
+                <label for="{{ form.tags.id_for_label }}" class="form-label">Tags (optional)</label>
+                {{ form.tags }}
+                <small class="form-text text-muted">Separate tags with commas</small>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Import File</button>
+            <a href="{% url 'note_list' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $('#{{ form.tags.id_for_label }}').tagsinput();
+</script>
+{% endblock %}
