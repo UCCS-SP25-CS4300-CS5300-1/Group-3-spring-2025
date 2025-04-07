@@ -77,6 +77,7 @@ def get_assignments_for_course(canvas_url, course_id, api_token):
 
 #The view that handles the form submission and fetches assignments.
 @csrf_exempt
+@login_required
 def fetch_assignments(request):
     if request.method == "POST":
         #Gets the credentials from the submitted form.
