@@ -1,5 +1,6 @@
 # models.py
 from django.db import models
+from django.contrib.auth.models import User
 
 #Model (for assignments, quizzes, tests)
 class Event(models.Model):
@@ -8,7 +9,13 @@ class Event(models.Model):
         ('quiz', 'Quiz'),
         ('test', 'Test'),
     ]
+<<<<<<< HEAD
     title = models.CharField(max_length=255)  #Name for assignment, quiz, or test
+=======
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null = True)
+    title = models.CharField(max_length=255) # Name for assignment, quiz, or test
+>>>>>>> Calender_Login
     description = models.TextField()
     due_date = models.DateTimeField()
     event_type = models.CharField(max_length=10, choices=EVENT_TYPES)
@@ -17,6 +24,7 @@ class Event(models.Model):
     def __str__(self):
         return f"{self.title} ({self.get_event_type_display()})"
 
+<<<<<<< HEAD
 
 #Module model to store Canvas module information
 class Module(models.Model):
@@ -39,3 +47,12 @@ class ModuleItem(models.Model):
     def __str__(self):
         return self.title
 
+=======
+#Model for user profile including the api access token
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    canvas_token = models.CharField(max_length=255, blank=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s Profile"
+>>>>>>> Calender_Login

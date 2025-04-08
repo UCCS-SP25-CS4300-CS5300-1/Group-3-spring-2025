@@ -10,6 +10,9 @@ from django.shortcuts import render
 import json
 from django.core.serializers.json import DjangoJSONEncoder
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.decorators import login_required
+
 
 #Clear button view
 @csrf_exempt
@@ -28,8 +31,9 @@ def index(request):
     
 #Calendar view
 @csrf_exempt
+@login_required
 def calendar_view(request):
-    events = list(Event.objects.all().values("course_name", "title", "event_type", "due_date"))
+    events = list(Event.objects.filter(user=request.user).values("course_name", "title", "event_type", "due_date"))
     events_json = json.dumps(events, cls=DjangoJSONEncoder)
     return render(request, "home/calendar.html", {"events_json": events_json})
 
@@ -99,10 +103,15 @@ def get_module_items_for_module(canvas_url, course_id, module_id, api_token):
 
 #The view that handles the form submission and fetches assignments and modules.
 @csrf_exempt
+@login_required
 def fetch_assignments(request):
     if request.method == "POST":
         canvas_url = request.POST.get('canvas_url')
         api_token = request.POST.get('api_token')
+
+        profile = request.user.userprofile
+        profile.canvas_token = api_token
+        profile.save()
 
         try:
             courses = get_active_courses(canvas_url, api_token)
@@ -131,10 +140,11 @@ def fetch_assignments(request):
 
                 if assignment_due and assignment_due.year == current_year:
                     Event.objects.create(
+                        user=request.user,
                         title=assignment_name,
                         description=assignment.get("description") or "",
                         due_date=assignment_due,
-                        event_type="assignment",
+                        event_type="assignment",  # treating all as generic events
                         course_name=course_name
                     )
                     assignments_count += 1
@@ -208,3 +218,18 @@ def wipe_saved(request):
     else:
         messages.error(request, "Invalid request.")
     return redirect('calendar_view')
+
+#Method to register user
+def register(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('login')  
+    else:
+        form = UserCreationForm()
+    return render(request, 'home/register.html', {'form': form})
+
+@login_required
+def index(request):
+    return render(request, 'home/index.html')
