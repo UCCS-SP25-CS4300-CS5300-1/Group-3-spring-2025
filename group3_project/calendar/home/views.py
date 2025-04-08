@@ -37,7 +37,7 @@ def calendar_view(request):
     events_json = json.dumps(events, cls=DjangoJSONEncoder)
     return render(request, "home/calendar.html", {"events_json": events_json})
 
-#Reuse the parse_date function Canvass Integration Script
+#Parse's the dates for the assignments
 @csrf_exempt
 def parse_date(date_str):
     if not date_str:
@@ -70,7 +70,6 @@ def get_assignments_for_course(canvas_url, course_id, api_token):
         response = requests.get(assignments_endpoint, headers=headers)
         response.raise_for_status()
     except requests.RequestException as e:
-        # Log the error and return an empty list for this course.
         print(f"Error fetching assignments for course {course_id}: {e}")
         return []
     return response.json()
@@ -131,33 +130,33 @@ def fetch_assignments(request):
             course_id = course.get("id")
             course_name = course.get("name", "Unknown Course")
             
-            #Fetch and store assignments
+            #Fetchs and store assignments
             assignments = get_assignments_for_course(canvas_url, course_id, api_token)
             for assignment in assignments:
                 assignment_name = assignment.get("name", "Untitled Assignment")
                 due_at = assignment.get("due_at")
                 assignment_due = parse_date(due_at) if due_at else None
 
+                #Makes sure all assignments are for given year
                 if assignment_due and assignment_due.year == current_year:
                     Event.objects.create(
                         user=request.user,
                         title=assignment_name,
                         description=assignment.get("description") or "",
                         due_date=assignment_due,
-                        event_type="assignment",  # treating all as generic events
+                        event_type="assignment",  
                         course_name=course_name
                     )
                     assignments_count += 1
 
-            #Now fetch and store modules
+            #Fetchs and store modules
             modules = get_modules_for_course(canvas_url, course_id, api_token)
             for module in modules:
-                module_title = module.get("name", "Untitled Module")  # Using "name" from API response
+                module_title = module.get("name", "Untitled Module")
                 new_module = Module.objects.create(
-                    title=module_title,  # This matches the Module model's field
+                    title=module_title, 
                     course_name=course_name,
                     description=module.get("description") or ""
-                    # You can add additional fields as needed
                 )
                 modules_count += 1
 
@@ -212,7 +211,7 @@ def wipe_saved(request):
         Event.objects.all().delete()
         #Clears all modules
         Module.objects.all().delete()
-        #Clears module items if needed
+        #Clears module items
         ModuleItem.objects.all().delete()
         messages.success(request, "All saved events and modules have been wiped.")
     else:

@@ -2,7 +2,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-#Model (for assignments, quizzes, tests)
+#Model for assignments, quizzes, and tests
 class Event(models.Model):
     EVENT_TYPES = [
         ('assignment', 'Assignment'),
@@ -11,7 +11,7 @@ class Event(models.Model):
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, null = True)
-    title = models.CharField(max_length=255) # Name for assignment, quiz, or test
+    title = models.CharField(max_length=255) #Name for assignment, quiz, or test
     description = models.TextField()
     due_date = models.DateTimeField()
     event_type = models.CharField(max_length=10, choices=EVENT_TYPES)
