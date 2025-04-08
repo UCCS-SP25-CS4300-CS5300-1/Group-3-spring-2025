@@ -34,7 +34,7 @@ jobs:
         working-directory: group3_project/calendar
 
       - name: Install Railway CLI
-        run: npm install -g railway
+        run: npm install -g @railway/cli
 
       - name: Deploy to railway
         env:
