@@ -1,6 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 import json
+from unittest.mock import patch
 from .models import Note
 from .forms import NoteForm
 from .forms import FileImportForm
@@ -146,3 +147,33 @@ class FileImportTestCase(TestCase):
         html_content = note.get_html_content()
         self.assertIn("<h1>Markdown Test</h1>", html_content)
         self.assertIn("<strong>Bold text</strong>", html_content)
+
+class AISummarizationTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.url = '/notepage/api/summarize/'  
+
+    @patch('notepage.views.OpenAI') 
+    def test_summarize_note_success(self, mock_openai):
+        
+        mock_client = mock_openai.return_value
+        mock_client.chat.completions.create.return_value = type('obj', (object,), {
+            'choices': [type('obj', (object,), {
+                'message': type('obj', (object,), {
+                    'content': 'This is a test summary.'
+                })
+            })]
+        })()
+
+        response = self.client.post(self.url, json.dumps({
+            'content': 'This is a long test note that needs summarizing.'
+        }), content_type='application/json')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('summary', response.json())
+        self.assertEqual(response.json()['summary'], 'This is a test summary.')
+
+    def test_summarize_note_missing_content(self):
+        response = self.client.post(self.url, json.dumps({}), content_type='application/json')
+        self.assertEqual(response.status_code, 200) 
+        self.assertIn('summary', response.json())    

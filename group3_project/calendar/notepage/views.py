@@ -156,8 +156,9 @@ def get_note_content(request, pk):
 @csrf_exempt
 def summarize_note(request):
     load_dotenv()
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    
     if request.method == 'POST':
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         try:
             data = json.loads(request.body)
             content = data.get('content', '')
