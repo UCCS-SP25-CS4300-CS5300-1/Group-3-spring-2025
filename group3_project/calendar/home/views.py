@@ -231,6 +231,7 @@ def register(request):
         form = UserCreationForm()
     return render(request, 'home/register.html', {'form': form})
 
+@csrf_exempt
 @login_required
 def index(request):
     return render(request, 'home/index.html')
