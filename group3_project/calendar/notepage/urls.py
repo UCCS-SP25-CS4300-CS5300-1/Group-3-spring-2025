@@ -10,4 +10,6 @@ urlpatterns = [
     path('autosave/', views.autosave_note, name='autosave_note'),
     path('deletetags/', views.delete_tags, name='delete_tags'),
     path('import/', views.import_file, name='import_file'),
+    path('api/notes/<int:pk>/content/', views.get_note_content, name='get_note_content'),
+    path('api/summarize/', views.summarize_note, name='summarize_note'),
 ]
