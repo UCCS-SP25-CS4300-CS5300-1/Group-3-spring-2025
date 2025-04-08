@@ -36,7 +36,7 @@ jobs:
         run: |
           python manage.py migrate
           python manage.py collectstatic --noinput
-        working-directory: working-directory: group3_project/calendar
+        working-directory: group3_project/calendar
 
       - name: Install Railway CLI
         run: npm install -g railway
