@@ -29,8 +29,8 @@ jobs:
 
       - name: Run migrations and collectstatic
         run: |
-          python calendar_app/manage.py migrate
-          python calendar_app/manage.py collectstatic --noinput
+          python group3_project/calendar/calendar_app/manage.py migrate
+          python group3_project/calendar/calendar_app/manage.py collectstatic --noinput
 
       - name: Install Railway CLI
         run: npm install -g railway
