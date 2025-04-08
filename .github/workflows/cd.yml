@@ -37,9 +37,13 @@ jobs:
         run: npm install -g @railway/cli
 
       - name: Deploy to railway
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: |
-          npx railway link --project stellar-nurturing
-          npx railway up --service Group-3-spring-2025
+        run: npx railway up \
+          --project stellar-nurturing \
+          --service Group-3-spring-2025 \
+          --token ${{ secrets.RAILWAY_TOKEN_LOGIN }}
+
+#          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+#        run: |
+#          npx railway link --project stellar-nurturing
+#          npx railway up --service Group-3-spring-2025
 #RAILWAY_API_KEY: ${{ secrets.RAILWAY_TOKEN_LOGIN }}
