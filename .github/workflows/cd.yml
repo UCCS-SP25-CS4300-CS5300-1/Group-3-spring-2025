@@ -17,11 +17,6 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Dump directory tree
-        run: |
-          pwd
-          ls -R .
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -45,5 +40,5 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          railway link --project stellar-nurturing
+          railway use --project stellar-nurturing
           railway up --service Group-3-spring-2025
