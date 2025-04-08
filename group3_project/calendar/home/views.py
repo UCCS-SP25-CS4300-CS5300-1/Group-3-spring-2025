@@ -1,4 +1,4 @@
-#views.py
+# views.py
 from django.shortcuts import render, redirect
 from django.contrib import messages
 import requests
@@ -10,6 +10,9 @@ from django.shortcuts import render
 import json
 from django.core.serializers.json import DjangoJSONEncoder
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.decorators import login_required
+
 
 #Clear button view
 @csrf_exempt
@@ -28,8 +31,9 @@ def index(request):
     
 #Calendar view
 @csrf_exempt
+@login_required
 def calendar_view(request):
-    events = list(Event.objects.all().values("course_name", "title", "event_type", "due_date"))
+    events = list(Event.objects.filter(user=request.user).values("course_name", "title", "event_type", "due_date"))
     events_json = json.dumps(events, cls=DjangoJSONEncoder)
     return render(request, "home/calendar.html", {"events_json": events_json})
 
@@ -71,12 +75,43 @@ def get_assignments_for_course(canvas_url, course_id, api_token):
         return []
     return response.json()
 
+#Gets modules for a given course.
+@csrf_exempt
+def get_modules_for_course(canvas_url, course_id, api_token):
+    modules_endpoint = f"{canvas_url}/api/v1/courses/{course_id}/modules?per_page=100"
+    headers = {"Authorization": f"Bearer {api_token}"}
+    try:
+        response = requests.get(modules_endpoint, headers=headers)
+        response.raise_for_status()
+    except requests.RequestException as e:
+        print(f"Error fetching modules for course {course_id}: {e}")
+        return []
+    return response.json()
+
+#Gets module items for a given module.
+@csrf_exempt
+def get_module_items_for_module(canvas_url, course_id, module_id, api_token):
+    items_endpoint = f"{canvas_url}/api/v1/courses/{course_id}/modules/{module_id}/items"
+    headers = {"Authorization": f"Bearer {api_token}"}
+    try:
+        response = requests.get(items_endpoint, headers=headers)
+        response.raise_for_status()
+    except requests.RequestException as e:
+        print(f"Error fetching module items for module {module_id}: {e}")
+        return []
+    return response.json()
+
 #The view that handles the form submission and fetches assignments and modules.
 @csrf_exempt
+@login_required
 def fetch_assignments(request):
     if request.method == "POST":
         canvas_url = request.POST.get('canvas_url')
         api_token = request.POST.get('api_token')
+
+        profile = request.user.userprofile
+        profile.canvas_token = api_token
+        profile.save()
 
         try:
             courses = get_active_courses(canvas_url, api_token)
@@ -105,31 +140,45 @@ def fetch_assignments(request):
 
                 if assignment_due and assignment_due.year == current_year:
                     Event.objects.create(
+                        user=request.user,
                         title=assignment_name,
                         description=assignment.get("description") or "",
                         due_date=assignment_due,
-                        event_type="assignment",
+                        event_type="assignment",  # treating all as generic events
                         course_name=course_name
                     )
                     assignments_count += 1
+
+            #Now fetch and store modules
+            modules = get_modules_for_course(canvas_url, course_id, api_token)
+            for module in modules:
+                module_title = module.get("name", "Untitled Module")  # Using "name" from API response
+                new_module = Module.objects.create(
+                    title=module_title,  # This matches the Module model's field
+                    course_name=course_name,
+                    description=module.get("description") or ""
+                    # You can add additional fields as needed
+                )
+                modules_count += 1
+
+                #Fetch and store module items for each module
+                module_items = get_module_items_for_module(canvas_url, course_id, module.get("id"), api_token)
+                for item in module_items:
+                    ModuleItem.objects.create(
+                        module=new_module,
+                        title=item.get("title", "Untitled Item"),
+                        item_type=item.get("type", ""),
+                        file_url=item.get("external_url") or "",
+                        content=item.get("content") or ""
+
+                    )
+
         messages.success(
             request,
-            f"Fetched and added {assignments_count} assignment(s) to the calendar."
+            f"Fetched and added {assignments_count} assignment(s) and {modules_count} module(s) to the calendar."
         )
         return redirect('calendar_view')
     return redirect('index')
-
-@csrf_exempt
-def get_modules_for_course(canvas_url, course_id, api_token):
-    modules_endpoint = f"{canvas_url}/api/v1/courses/{course_id}/modules?per_page=100"
-    headers = {"Authorization": f"Bearer {api_token}"}
-    try:
-        response = requests.get(modules_endpoint, headers=headers)
-        response.raise_for_status()
-    except requests.RequestException as e:
-        print(f"Error fetching modules for course {course_id}: {e}")
-        return []
-    return response.json()
 
 #Course list view
 @csrf_exempt
@@ -169,3 +218,18 @@ def wipe_saved(request):
     else:
         messages.error(request, "Invalid request.")
     return redirect('calendar_view')
+
+#Method to register user
+def register(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('login')  
+    else:
+        form = UserCreationForm()
+    return render(request, 'home/register.html', {'form': form})
+
+@login_required
+def index(request):
+    return render(request, 'home/index.html')

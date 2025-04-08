@@ -9,7 +9,41 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.4/index.global.min.js"></script>
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+
   <style>
+    .fc-event-title-container {
+      max-width: 150px !important;
+      width: 150px !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+
+    .fc-daygrid-event-harness.fc-daygrid-block-event {
+      right: auto !important;
+      width: 100% !important; 
+      max-width: 100% !important; 
+      overflow: hidden !important;
+    }
+
+    .fc-daygrid-event {
+      max-width: 100% !important;
+      overflow: hidden !important;
+      min-width: 0 !important;
+    }
+    .fc-event-title.fc-sticky {
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      display: inline-block !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      /* To break unspaced text: */
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
     #calendar {
       background-color: white;
       padding: 20px;
@@ -34,6 +68,27 @@
       <div id="calendar"></div>
     </main>
   </div>
+
+  <!-- Bootstrap Modal for Event Details -->
+  <div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="eventModalLabel">Event Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p id="eventDueDate"></p>
+          <p id="eventDescription"></p>
+          <p id="eventCourse"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Embed the JSON data -->
   <script id="events-json" type="application/json">
     {{ events_json|safe }}
@@ -57,10 +112,17 @@
           bgColor = "#3cda49";
         }
         return {
-          title: event.course_name + ": " + event.title + " (" + event.event_type + ")",
+          title: moment(event.due_date).format('h:mma') + " " + event.title + " (" + event.event_type + ")" + " - " + event.course_name,
           start: event.due_date,
+          allDay: true,
           textColor: "black",
-          backgroundColor: bgColor
+          backgroundColor: bgColor,
+          extendedProps: {
+            description: event.description,
+            courseName: event.course_name,
+            dueDate: event.due_date,
+            eventName: event.title
+          }
         };
       });
       var calendarEl = document.getElementById("calendar");
@@ -76,11 +138,29 @@
           start: currentYear + "-01-01",
           end: currentYear + "-12-31"
         },
-        events: calendarEvents
+        events: calendarEvents,
+        eventClick: function(info) {
+          info.jsEvent.preventDefault();
+          var eventObj = info.event;
+          var dueDate =  moment(eventObj.extendedProps.dueDate).format('MMMM Do YYYY, h:mma');
+          var description = eventObj.extendedProps.description || "No description available.";
+          var courseName = eventObj.extendedProps.courseName || "No class specified.";
+          var eventName = eventObj.extendedProps.eventName || "No title available";
+
+          document.getElementById('eventModalLabel').innerText = eventName;
+          document.getElementById('eventDueDate').innerText = "Due Date: " + dueDate;
+          document.getElementById('eventDescription').innerText = "Description: " + description;
+          document.getElementById('eventCourse').innerText = "Class: " + courseName;
+
+          var modalEl = document.getElementById('eventModal');
+          var modal = new bootstrap.Modal(modalEl);
+          modal.show();
+        }
       });
       calendar.render();
     });
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
 

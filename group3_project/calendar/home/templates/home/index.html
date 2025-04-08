@@ -1,31 +1,38 @@
 {% extends "home/base.html" %}
+{% load static %}
+
 {% block title %}Home - Calendai{% endblock %}
+
 {% block content %}
-<header>
-    <h1>Calendai</h1>
-</header>
-<main>
-    <h3>How to use Calendai?</h3>
-    <p>First, sign into Canvas, then copy the URL you get into the first box below.</p>
-    <p>Second, go to Canvas -> Account -> Settings -> Approved Integrations</p>
-    <p>Generate a new Access Token, then copy the token into the second box below.</p>
-    <p>Congratulations! You can now use Calendai.</p>
-    <!-- Canvas Credentials Form -->
-    <form method="post" action="{% url 'fetch_assignments' %}">
-        {% csrf_token %}
-        <div>
-            <label for="canvas_url">Canvas URL:</label>
-            <input type="url" name="canvas_url" id="canvas_url" required placeholder="https://yourcanvas.instructure.com">
-        </div>
-        <div>
-            <label for="api_token">API Token:</label>
-            <input type="password" name="api_token" id="api_token" required placeholder="Enter your API token">
-        </div>
-        <button type="submit">Fetch Assignments</button>
-    </form>
-    <form method="post" action="{% url 'wipe_saved' %}" style="margin-top: 20px;">
-        {% csrf_token %}
-        <button type="submit">Wipe Saved Data</button>
-    </form>
-</main>
+  <header>
+      <h1>Calendai</h1>
+  </header>
+  <main>
+      <h3>How to use Calendai?</h3>
+      <p>First, sign into Canvas, then copy the URL you get into the first box below.</p>
+      <p>Second, go to Canvas -> Account -> Settings -> Approved Integrations</p>
+      <p>Generate a new Access Token, then copy the token into the second box below.</p>
+      <p>Congratulations! You can now use Calendai.</p>
+      <!-- Canvas Credentials Form -->
+      <form method="post" action="{% url 'fetch_assignments' %}">
+          {% csrf_token %}
+          <div>
+              <label for="canvas_url">Canvas URL:</label>
+              <input type="url" name="canvas_url" id="canvas_url" required placeholder="https://yourcanvas.instructure.com">
+          </div>
+          <div>
+              <label for="api_token">API Token:</label>
+              <input type="password" name="api_token" id="api_token" required placeholder="Enter your API token">
+          </div>
+          <button type="submit">Fetch Assignments</button>
+      </form>
+      <form method="post" action="{% url 'wipe_saved' %}" style="margin-top: 20px;">
+          {% csrf_token %}
+          <button type="submit">Wipe Saved Data</button>
+      </form>
+  </main>
+  <footer>
+      <p>Created by [Alejandro Barragan Solis, Carson King, Brian Goins, Aidan Meshberg, Ashlee Paradis] - Last Updated 4/7/2025</p>
+  </footer>
 {% endblock %}
+

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - Calendai</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Optional: Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+  {% load static %}
+  <!-- Your custom CSS -->
+  <link rel="stylesheet" href="{% static 'styles.css' %}">
+  <style>
+    body {
+      background-color: #faf8f8;
+      font-family: Georgia, sans-serif;
+      margin: 0;
+    }
+    .container-vertical {
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <div class="container-fluid d-flex justify-content-center align-items-center container-vertical">
+    <div class="card shadow p-4" style="max-width: 400px; width: 100%;">
+      <!-- New Calendai Header -->
+      <h1 class="text-center mb-3">Calendai</h1>
+      <h2 class="card-title text-center mb-4">Sign Up</h2>
+      
+      <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success w-100">Register</button>
+      </form>
+      
+      <div class="mt-3 text-center">
+        <p>Already have an account? 
+           <a href="{% url 'login' %}">Sign In</a>
+        </p>
+      </div>
+    </div>
+  </div>
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
