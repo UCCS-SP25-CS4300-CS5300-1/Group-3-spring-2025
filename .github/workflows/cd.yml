@@ -41,7 +41,7 @@ jobs:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_PROJECT: stellar-nurturing
           RAILWAY_SERVICE: Group-3-spring-2025
-        run: npx railway up --service $RAILWAY_SERVIC
+        run: npx railway up --service $RAILWAY_SERVICE
 
 #          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 #        run: |
