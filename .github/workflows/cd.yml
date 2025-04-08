@@ -40,5 +40,5 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          railway use --project stellar-nurturing
+          railway link --project stellar-nurturing
           railway up --service Group-3-spring-2025
