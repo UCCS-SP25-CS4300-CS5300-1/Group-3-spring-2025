@@ -220,6 +220,7 @@ def wipe_saved(request):
     return redirect('calendar_view')
 
 #Method to register user
+@csrf_exempt
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
@@ -230,6 +231,7 @@ def register(request):
         form = UserCreationForm()
     return render(request, 'home/register.html', {'form': form})
 
+@csrf_exempt
 @login_required
 def index(request):
     return render(request, 'home/index.html')
