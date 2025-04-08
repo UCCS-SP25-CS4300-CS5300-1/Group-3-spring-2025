@@ -40,9 +40,8 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_LOGIN }}
           RAILWAY_PROJECT: stellar-nurturing
-        run: npx railway up \
-          --service Group-3-spring-2025 \
-          --token $RAILWAY_TOKEN
+          RAILWAY_SERVICE: Group-3-spring-2025
+        run: npx railway up
 
 #          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 #        run: |
