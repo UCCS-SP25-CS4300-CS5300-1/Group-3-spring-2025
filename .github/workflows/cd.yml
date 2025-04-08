@@ -38,7 +38,7 @@ jobs:
 
       - name: Deploy to Railway
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_LOGIN }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_PROJECT: stellar-nurturing
           RAILWAY_SERVICE: Group-3-spring-2025
         run: npx railway up
