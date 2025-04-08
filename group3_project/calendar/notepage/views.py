@@ -6,6 +6,9 @@ from .forms import NoteForm
 from .forms import FileImportForm
 from taggit.models import Tag
 import json
+from openai import OpenAI
+import os
+from dotenv import load_dotenv
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.uploadedfile import UploadedFile
@@ -141,3 +144,34 @@ def import_file(request):
         form = FileImportForm()
     
     return render(request, 'notepage/import_file.html', {'form': form})
+
+@csrf_exempt
+def get_note_content(request, pk):
+    try:
+        note = Note.objects.get(pk=pk)
+        return JsonResponse({'content': note.content})
+    except Note.DoesNotExist:
+        return JsonResponse({'error': 'Note not found'}, status=404)
+
+@csrf_exempt
+def summarize_note(request):
+    load_dotenv()
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            content = data.get('content', '')
+
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "Summarize this note in 1-2 sentences."},
+                    {"role": "user", "content": content}
+                ]
+            )
+
+            summary = response.choices[0].message.content
+            return JsonResponse({'summary': summary})
+
+        except Exception as e:
+            return JsonResponse({'summary': 'Error: ' + str(e)}, status=500)
