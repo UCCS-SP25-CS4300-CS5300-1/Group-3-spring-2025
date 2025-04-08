@@ -3,6 +3,9 @@ from django.urls import reverse
 import json
 from .models import Note
 from .forms import NoteForm
+from .forms import FileImportForm
+from django.core.files.uploadedfile import SimpleUploadedFile
+from taggit.models import Tag
 
 class NoteTestCase(TestCase):
     def setUp(self):
@@ -22,7 +25,7 @@ class NoteTestCase(TestCase):
         form = NoteForm(data={
             'title': 'New note',
             'content': 'Content here',
-            'tags': 'tag1, tag2'
+            'tags': 'tag1,tag2'
         })
         self.assertTrue(form.is_valid())
 
@@ -40,7 +43,7 @@ class NoteTestCase(TestCase):
         response = self.client.post(reverse('create_note'), {
             'title': 'New note',
             'content': 'New content',
-            'tags': 'new, note'
+            'tags': 'new,note'
         })
         self.assertTrue(Note.objects.filter(title='New note').exists())
         new_note = Note.objects.get(title='New note')
@@ -51,7 +54,7 @@ class NoteTestCase(TestCase):
         response = self.client.post(reverse('edit_note', args=[self.test_note.pk]), {
             'title': 'Updated note',
             'content': 'Updated content',
-            'tags': 'updated, note'
+            'tags': 'updated,note'
         })
         self.test_note.refresh_from_db()
         self.assertEqual(self.test_note.title, 'Updated note')
@@ -81,3 +84,65 @@ class NoteTestCase(TestCase):
         content = response.content.decode()
         self.assertIn("First note", content)
         self.assertNotIn("Second note", content)
+
+class FileImportTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.test_note = Note.objects.create(
+            title="Test note",
+            content="This is a test note"
+        )
+        self.test_note.tags.add("test")
+
+    def test_import_form_valid(self):
+        file = SimpleUploadedFile("test_file.txt", b"File content")
+        form = FileImportForm(data={'tags': 'import,test'}, files={'file': file})
+        self.assertTrue(form.is_valid())
+
+    def test_import_form_invalid(self):
+        form = FileImportForm(data={'tags': 'import,test'}) # No file is passed
+        self.assertFalse(form.is_valid())
+
+    def test_import_text_file(self):
+        content = "This is test content"
+        file = SimpleUploadedFile("test_file.txt", content.encode('utf-8'))
+        
+        response = self.client.post(reverse('import_file'), {
+            'file': file,
+            'tags': 'import,test'
+        })
+        
+        self.assertTrue(Note.objects.filter(title='test_file').exists())
+        note = Note.objects.get(title='test_file')
+        
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('note_detail', args=[note.pk]))
+        
+        self.assertEqual(note.content, content)
+        self.assertEqual(note.tags.count(), 2)
+        self.assertIn('import', note.tags.names())
+        self.assertIn('test', note.tags.names())
+
+    def test_import_binary_file(self):
+        binary_data = bytes([0x80, 0x81, 0x82, 0x83])
+        file = SimpleUploadedFile("binary_file.bin", binary_data)
+        
+        response = self.client.post(reverse('import_file'), {'file': file})
+        
+        self.assertTrue(Note.objects.filter(title='binary_file').exists())
+        note = Note.objects.get(title='binary_file')
+        
+        self.assertIn("This note was created from file", note.content)
+        self.assertIn("could not be displayed as text", note.content)
+
+    def test_import_markdown_file(self):
+        content = "# Markdown Test\n\n**Bold text**"
+        file = SimpleUploadedFile("test.md", content.encode('utf-8'))
+        
+        self.client.post(reverse('import_file'), {'file': file})
+        
+        note = Note.objects.get(title='test')
+        self.assertEqual(note.content, content)
+        html_content = note.get_html_content()
+        self.assertIn("<h1>Markdown Test</h1>", html_content)
+        self.assertIn("<strong>Bold text</strong>", html_content)

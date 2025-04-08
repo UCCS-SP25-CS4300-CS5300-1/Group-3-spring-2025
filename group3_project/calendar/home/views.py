@@ -169,4 +169,3 @@ def wipe_saved(request):
     else:
         messages.error(request, "Invalid request.")
     return redirect('calendar_view')
-

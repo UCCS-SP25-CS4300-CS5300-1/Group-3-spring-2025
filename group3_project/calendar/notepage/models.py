@@ -9,7 +9,7 @@ class Note(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     tags = TaggableManager(blank=True)
-    
+        
     def __str__(self):
         return self.title
     
@@ -19,3 +19,9 @@ class Note(models.Model):
     def save(self, *args, **kwargs):
         self.updated_at = timezone.now()
         super(Note, self).save(*args, **kwargs)
+    
+    @property
+    def filename(self):
+        if self.attachment:
+            return self.attachment.name.split('/')[-1]
+        return None
