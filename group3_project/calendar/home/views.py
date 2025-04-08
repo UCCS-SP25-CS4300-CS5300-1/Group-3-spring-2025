@@ -219,6 +219,7 @@ def wipe_saved(request):
         messages.error(request, "Invalid request.")
     return redirect('calendar_view')
 
+@csrf_exempt
 #Method to register user
 def register(request):
     if request.method == 'POST':
