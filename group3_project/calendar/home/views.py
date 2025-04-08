@@ -157,8 +157,11 @@ def assignment_detail(request, assignment_id):
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 41308aa (Added a full clear button)
+=======
+>>>>>>> refs/remotes/origin/NoteUploading
 #Module wipe button
 @csrf_exempt
 def wipe_saved(request):
@@ -175,7 +178,10 @@ def wipe_saved(request):
     return redirect('calendar_view')
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> a53e999 (Updated tests and added modules)
 =======
 >>>>>>> 41308aa (Added a full clear button)
+=======
+>>>>>>> refs/remotes/origin/NoteUploading

@@ -1,6 +1,7 @@
 from django.urls import path, include
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 from .views import index, fetch_assignments, calendar_view, clear_calendar, courses_list, course_detail, assignment_detail, wipe_saved
 =======
 from .views import index, fetch_assignments, calendar_view, clear_calendar, courses_list, course_detail, assignment_detail
@@ -8,6 +9,9 @@ from .views import index, fetch_assignments, calendar_view, clear_calendar, cour
 =======
 from .views import index, fetch_assignments, calendar_view, clear_calendar, courses_list, course_detail, assignment_detail, wipe_saved
 >>>>>>> 41308aa (Added a full clear button)
+=======
+from .views import index, fetch_assignments, calendar_view, clear_calendar, courses_list, course_detail, assignment_detail, wipe_saved
+>>>>>>> refs/remotes/origin/NoteUploading
 
 urlpatterns = [
     path('', index, name='index'),
@@ -19,11 +23,15 @@ urlpatterns = [
     path('assignment/<int:assignment_id>/', assignment_detail, name='assignment_detail'),
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     path('wipe_saved/', wipe_saved, name='wipe_saved'),
 =======
 >>>>>>> a53e999 (Updated tests and added modules)
 =======
     path('wipe_saved/', wipe_saved, name='wipe_saved'),
 >>>>>>> 41308aa (Added a full clear button)
+=======
+    path('wipe_saved/', wipe_saved, name='wipe_saved'),
+>>>>>>> refs/remotes/origin/NoteUploading
 ]
 
