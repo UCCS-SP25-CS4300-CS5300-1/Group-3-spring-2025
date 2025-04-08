@@ -21,7 +21,7 @@ jobs:
         run: |
           pwd
           ls -R .
-#
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -36,7 +36,7 @@ jobs:
         run: |
           python manage.py migrate
           python manage.py collectstatic --noinput
-        working-directory: group3_project/calendar/calendar_app
+        working-directory: working-directory: group3_project/calendar
 
       - name: Install Railway CLI
         run: npm install -g railway
