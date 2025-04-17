@@ -1,7 +1,13 @@
 # views.py
+import logging
+import requests
+import traceback
+from requests.adapters import HTTPAdapter
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from django.shortcuts import render, redirect
 from django.contrib import messages
 import requests
+from django.db import transaction
 from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404
 from datetime import datetime
@@ -12,6 +18,20 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
+
+logger = logging.getLogger(__name__)
+
+#Sets up a shared session
+session = requests.Session()
+adapter = HTTPAdapter(pool_connections=50, pool_maxsize=50, max_retries=3)
+session.mount("https://", adapter)
+session.mount("http://", adapter)
+
+#Fetches the Json data
+def fetch_json(url, headers):
+    resp = session.get(url, headers=headers)
+    resp.raise_for_status()
+    return resp.json()
 
 
 #Clear button view
@@ -49,135 +69,162 @@ def parse_date(date_str):
     except ValueError:
         return None
 
-#Gets a list of the user's active courses from Canvas.
+#Helper to fetch all active corses
 @csrf_exempt
 def get_active_courses(canvas_url, api_token):
-    courses_endpoint = f"{canvas_url}/api/v1/courses?enrollment_state=active&per_page=100"
+    url     = f"{canvas_url}/api/v1/courses?enrollment_state=active&per_page=100"
     headers = {"Authorization": f"Bearer {api_token}"}
-    try:
-        response = requests.get(courses_endpoint, headers=headers)
-        response.raise_for_status()
-    except requests.RequestException as e:
-        raise Exception(f"Error fetching courses: {e}")
-    return response.json()
+    return fetch_json(url, headers)
 
-#Gets all assignments for a given course.
-@csrf_exempt
-def get_assignments_for_course(canvas_url, course_id, api_token):
-    assignments_endpoint = f"{canvas_url}/api/v1/courses/{course_id}/assignments?per_page=100"
-    headers = {"Authorization": f"Bearer {api_token}"}
-    try:
-        response = requests.get(assignments_endpoint, headers=headers)
-        response.raise_for_status()
-    except requests.RequestException as e:
-        print(f"Error fetching assignments for course {course_id}: {e}")
-        return []
-    return response.json()
-
-#Gets modules for a given course.
-@csrf_exempt
-def get_modules_for_course(canvas_url, course_id, api_token):
-    modules_endpoint = f"{canvas_url}/api/v1/courses/{course_id}/modules?per_page=100"
-    headers = {"Authorization": f"Bearer {api_token}"}
-    try:
-        response = requests.get(modules_endpoint, headers=headers)
-        response.raise_for_status()
-    except requests.RequestException as e:
-        print(f"Error fetching modules for course {course_id}: {e}")
-        return []
-    return response.json()
-
-#Gets module items for a given module.
-@csrf_exempt
-def get_module_items_for_module(canvas_url, course_id, module_id, api_token):
-    items_endpoint = f"{canvas_url}/api/v1/courses/{course_id}/modules/{module_id}/items"
-    headers = {"Authorization": f"Bearer {api_token}"}
-    try:
-        response = requests.get(items_endpoint, headers=headers)
-        response.raise_for_status()
-    except requests.RequestException as e:
-        print(f"Error fetching module items for module {module_id}: {e}")
-        return []
-    return response.json()
-
-#The view that handles the form submission and fetches assignments and modules.
+#Fetches all assignments and modules
 @csrf_exempt
 @login_required
 def fetch_assignments(request):
-    if request.method == "POST":
-        canvas_url = request.POST.get('canvas_url')
-        api_token = request.POST.get('api_token')
+    if request.method != "POST":
+        print("[DEBUG] fetch_assignments called with non-POST")
+        return redirect('index')
 
+    try:
+        print("===== Starting fetch_assignments =====")
+        canvas_url = request.POST.get('canvas_url')
+        api_token  = request.POST.get('api_token')
+        print(f"[DEBUG] canvas_url={canvas_url}, api_token={'*' * 4}")
+
+        #Saves token
         profile = request.user.userprofile
         profile.canvas_token = api_token
         profile.save()
+        print("[DEBUG] Saved API token to user profile")
 
-        try:
-            courses = get_active_courses(canvas_url, api_token)
-        except Exception as e:
-            messages.error(request, str(e))
-            return redirect('index')  
+        #Fetches courses
+        courses = get_active_courses(canvas_url, api_token)
+        print(f"[DEBUG] Fetched {len(courses)} active course(s)")
 
         if not courses:
-            messages.error(request, "No courses found.")
+            print("[DEBUG] No active courses found; aborting")
             return redirect('index')
 
+        headers      = {"Authorization": f"Bearer {api_token}"}
         current_year = datetime.now().year
-        assignments_count = 0
-        modules_count = 0
 
-        for course in courses:
-            course_id = course.get("id")
-            course_name = course.get("name", "Unknown Course")
-            
-            #Fetchs and store assignments
-            assignments = get_assignments_for_course(canvas_url, course_id, api_token)
-            for assignment in assignments:
-                assignment_name = assignment.get("name", "Untitled Assignment")
-                due_at = assignment.get("due_at")
-                assignment_due = parse_date(due_at) if due_at else None
+        #Parallel fetches assignments & modules
+        assn_futs = {}
+        mod_futs  = {}
+        with ThreadPoolExecutor(max_workers=10) as exe:
+            for c in courses:
+                cid = c["id"]
+                assn_url = f"{canvas_url}/api/v1/courses/{cid}/assignments?per_page=100"
+                mod_url  = f"{canvas_url}/api/v1/courses/{cid}/modules?per_page=100"
+                assn_futs[exe.submit(fetch_json, assn_url, headers)] = cid
+                mod_futs [exe.submit(fetch_json, mod_url,  headers)] = cid
 
-                #Makes sure all assignments are for given year
-                if assignment_due and assignment_due.year == current_year:
-                    Event.objects.create(
+        assignments_by_course = {}
+        for fut, cid in assn_futs.items():
+            try:
+                data = fut.result()
+            except Exception as e:
+                print(f"[ERROR] fetching assignments for course {cid}: {e}")
+                data = []
+            print(f"[DEBUG] course {cid}: {len(data)} assignment(s)")
+            assignments_by_course[cid] = data
+
+        modules_by_course = {}
+        for fut, cid in mod_futs.items():
+            try:
+                data = fut.result()
+            except Exception as e:
+                print(f"[ERROR] fetching modules for course {cid}: {e}")
+                data = []
+            print(f"[DEBUG] course {cid}: {len(data)} module(s)")
+            modules_by_course[cid] = data
+
+        #Builds model instances
+        event_objs  = []
+        module_objs = []
+        module_jobs = []  #stores (cid, course_name, module_id, module_title)
+
+        for c in courses:
+            cid   = c["id"]
+            cname = c.get("name", "Unknown Course")
+
+            for a in assignments_by_course.get(cid, []):
+                due = parse_date(a.get("due_at") or "")
+                if due and due.year == current_year:
+                    event_objs.append(Event(
                         user=request.user,
-                        title=assignment_name,
-                        description=assignment.get("description") or "",
-                        due_date=assignment_due,
-                        event_type="assignment",  
-                        course_name=course_name
-                    )
-                    assignments_count += 1
+                        title=a.get("name","Untitled Assignment"),
+                        description=a.get("description") or "",
+                        due_date=due,
+                        event_type="assignment",
+                        course_name=cname
+                    ))
 
-            #Fetchs and store modules
-            modules = get_modules_for_course(canvas_url, course_id, api_token)
-            for module in modules:
-                module_title = module.get("name", "Untitled Module")
-                new_module = Module.objects.create(
-                    title=module_title, 
-                    course_name=course_name,
-                    description=module.get("description") or ""
-                )
-                modules_count += 1
+            for m in modules_by_course.get(cid, []):
+                mod_title = m.get("name","Untitled Module")
+                module_objs.append(Module(
+                    title=mod_title,
+                    course_name=cname,
+                    description=m.get("description") or ""
+                ))
+                module_jobs.append((cid, cname, m["id"], mod_title))
 
-                #Fetch and store module items for each module
-                module_items = get_module_items_for_module(canvas_url, course_id, module.get("id"), api_token)
-                for item in module_items:
-                    ModuleItem.objects.create(
-                        module=new_module,
-                        title=item.get("title", "Untitled Item"),
-                        item_type=item.get("type", ""),
-                        file_url=item.get("external_url") or "",
-                        content=item.get("content") or ""
+        print(f"[DEBUG] Prepared {len(event_objs)} Event objs")
+        print(f"[DEBUG] Prepared {len(module_objs)} Module objs")
 
-                    )
+        #Bulk-inserts Events & Modules to save time
+        with transaction.atomic():
+            Event.objects.bulk_create(event_objs)
+            print(f"[DEBUG] Inserted {len(event_objs)} Events")
+            Module.objects.bulk_create(module_objs)
+            print(f"[DEBUG] Inserted {len(module_objs)} Modules")
 
-        messages.success(
-            request,
-            f"Fetched and added {assignments_count} assignment(s) and {modules_count} module(s) to the calendar."
+        #Parallel fetch & bulk-inserts ModuleItems to save time
+        item_futs = {}
+        with ThreadPoolExecutor(max_workers=20) as exe:
+            for cid, cname, mid, title in module_jobs:
+                url = f"{canvas_url}/api/v1/courses/{cid}/modules/{mid}/items"
+                item_futs[exe.submit(fetch_json, url, headers)] = (cname, title)
+
+        #map (course_name, title) → Module instance
+        unique_pairs = {(cname, title) for _, cname, _, title in module_jobs}
+        saved_modules = Module.objects.filter(
+            course_name__in=[p[0] for p in unique_pairs],
+            title__in=[p[1] for p in unique_pairs]
         )
+        mod_map = {(m.course_name, m.title): m for m in saved_modules}
+
+        item_objs = []
+        for fut, (cname, title) in item_futs.items():
+            try:
+                items = fut.result()
+            except Exception as e:
+                print(f"[ERROR] fetching items for {cname}/{title}: {e}")
+                continue
+            module_instance = mod_map.get((cname, title))
+            if not module_instance:
+                print(f"[WARN] no Module found for {cname}/{title}")
+                continue
+            for it in items:
+                item_objs.append(ModuleItem(
+                    module=module_instance,
+                    title=it.get("title","Untitled Item"),
+                    item_type=it.get("type",""),
+                    file_url=it.get("external_url") or "",
+                    content=it.get("content") or ""
+                ))
+
+        if item_objs:
+            ModuleItem.objects.bulk_create(item_objs)
+            print(f"[DEBUG] Inserted {len(item_objs)} ModuleItems")
+
+        print("===== Finished fetch_assignments =====")
         return redirect('calendar_view')
-    return redirect('index')
+
+    except Exception as e:
+        print("===== ERROR in fetch_assignments =====")
+        print(traceback.format_exc())
+        return redirect('index')
+
 
 #Course list view
 @csrf_exempt

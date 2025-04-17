@@ -1,49 +1,5 @@
 from django.test import TestCase, Client
 from django.urls import reverse
-<<<<<<< HEAD
-from django.contrib.messages import get_messages
-from django.http import Http404
-from unittest.mock import patch, MagicMock
-from datetime import datetime
-import json
-import requests
-
-from .models import Event, Module
-from .views import (
-    clear_calendar,
-    index,
-    calendar_view,
-    parse_date,
-    get_active_courses,
-    get_assignments_for_course,
-    fetch_assignments,
-    get_modules_for_course,
-    courses_list,
-    course_detail,
-    assignment_detail,
-)
-
-class ViewsTestCase(TestCase):
-    def setUp(self):
-        self.client = Client()
-        #Creates a sample Event for testing assignment_detail and calendar_view.
-        self.event = Event.objects.create(
-            title="Test Assignment",
-            description="Test description",
-            due_date=datetime(2025, 4, 4, 12, 0),
-            event_type="assignment",
-            course_name="Test Course"
-        )
-        #Creates a sample Module for testing modules view and course_detail.
-        self.module = Module.objects.create(
-            course_name="Test Course",
-            title="Module A",
-            description="Module A Desc"
-        )
-    
-    def test_clear_calendar_post(self):
-        #Creates an extra event so that clear_calendar has something to delete.
-=======
 from datetime import datetime, timedelta
 from home.models import Event
 from django.contrib.auth.models import User
@@ -101,7 +57,6 @@ class CalendarViewTests(TestCase):
 #Test to check clear calendar POST
     def test_clear_calendar_post_request(self):
         #Create test events
->>>>>>> Calender_Login
         Event.objects.create(
             title="Another Assignment",
             description="Desc",
@@ -112,110 +67,6 @@ class CalendarViewTests(TestCase):
         response = self.client.post(reverse('clear_calendar'))
         self.assertRedirects(response, reverse('calendar_view'))
         self.assertEqual(Event.objects.count(), 0)
-<<<<<<< HEAD
-        messages_list = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("All events have been cleared." in str(msg) for msg in messages_list))
-    
-    def test_clear_calendar_get(self):
-        response = self.client.get(reverse('clear_calendar'))
-        self.assertRedirects(response, reverse('calendar_view'))
-        messages_list = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("Invalid request." in str(msg) for msg in messages_list))
-    
-    def test_index_view(self):
-        response = self.client.get(reverse('index'))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'home/index.html')
-    
-    def test_calendar_view(self):
-        response = self.client.get(reverse('calendar_view'))
-        self.assertEqual(response.status_code, 200)
-        #The view passes JSON of events in context.
-        events_json = response.context['events_json']
-        events = json.loads(events_json)
-        self.assertEqual(len(events), Event.objects.count())
-    
-    def test_parse_date(self):
-        valid_date = "2025-04-04T12:00:00Z"
-        dt = parse_date(valid_date)
-        self.assertEqual(dt, datetime.fromisoformat("2025-04-04T12:00:00"))
-        self.assertIsNone(parse_date("invalid"))
-        self.assertIsNone(parse_date(""))
-    
-    @patch('home.views.requests.get')
-    def test_get_active_courses_success(self, mock_get):
-        fake_response = MagicMock()
-        fake_response.raise_for_status.return_value = None
-        fake_response.json.return_value = [{"id": 1, "name": "Course 1"}]
-        mock_get.return_value = fake_response
-        courses = get_active_courses("https://canvas.example.com", "token")
-        self.assertEqual(courses, [{"id": 1, "name": "Course 1"}])
-    
-    @patch('home.views.requests.get')
-    def test_get_active_courses_failure(self, mock_get):
-        mock_get.side_effect = requests.RequestException("Error")
-        with self.assertRaises(Exception) as context:
-            get_active_courses("https://canvas.example.com", "token")
-        self.assertIn("Error fetching courses", str(context.exception))
-    
-    @patch('home.views.requests.get')
-    def test_get_assignments_for_course_success(self, mock_get):
-        fake_response = MagicMock()
-        fake_response.raise_for_status.return_value = None
-        fake_response.json.return_value = [{
-            "name": "Assignment 1",
-            "due_at": "2025-04-04T12:00:00Z",
-            "description": "Desc"
-        }]
-        mock_get.return_value = fake_response
-        assignments = get_assignments_for_course("https://canvas.example.com", 1, "token")
-        self.assertEqual(assignments, [{
-            "name": "Assignment 1",
-            "due_at": "2025-04-04T12:00:00Z",
-            "description": "Desc"
-        }])
-    
-    @patch('home.views.requests.get')
-    def test_get_assignments_for_course_failure(self, mock_get):
-        mock_get.side_effect = requests.RequestException("Error")
-        assignments = get_assignments_for_course("https://canvas.example.com", 1, "token")
-        self.assertEqual(assignments, [])
-    
-    @patch('home.views.requests.get')
-    def test_get_modules_for_course_success(self, mock_get):
-        fake_response = MagicMock()
-        fake_response.raise_for_status.return_value = None
-        fake_response.json.return_value = [{"id": 10, "name": "Module 1", "description": "Mod Desc"}]
-        mock_get.return_value = fake_response
-        modules = get_modules_for_course("https://canvas.example.com", 1, "token")
-        self.assertEqual(modules, [{"id": 10, "name": "Module 1", "description": "Mod Desc"}])
-    
-    @patch('home.views.requests.get')
-    def test_get_modules_for_course_failure(self, mock_get):
-        mock_get.side_effect = requests.RequestException("Error")
-        modules = get_modules_for_course("https://canvas.example.com", 1, "token")
-        self.assertEqual(modules, [])
-    
-    @patch('home.views.get_active_courses')
-    @patch('home.views.get_assignments_for_course')
-    def test_fetch_assignments(self, mock_get_assignments, mock_get_active_courses):
-        #Clear existing events.
-        Event.objects.all().delete()
-        #Setup mocks to simulate a successful API response.
-        mock_get_active_courses.return_value = [{"id": 1, "name": "Course 1"}]
-        mock_get_assignments.return_value = [{
-            "name": "Assignment 1",
-            "due_at": "2025-04-04T12:00:00Z",
-            "description": "A1 Desc"
-        }]
-        post_data = {"canvas_url": "https://canvas.example.com", "api_token": "token"}
-        response = self.client.post(reverse('fetch_assignments'), data=post_data)
-        self.assertRedirects(response, reverse('calendar_view'))
-        messages_list = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("Fetched and added" in str(msg) for msg in messages_list))
-        # Only one Event should be created.
-        self.assertEqual(Event.objects.count(), 1)
-=======
 
 #Test to check if there is anything missing/Invalid
     def test_fetch_assignments_invalid_credentials(self):
@@ -262,4 +113,102 @@ class LoginTest(TestCase):
         user = User.objects.get(username=self.username)
         # This test assumes you have signals set up to automatically create a UserProfile.
         self.assertTrue(hasattr(user, 'userprofile'))
->>>>>>> Calender_Login
+#Utility functions tests
+class UtilsTests(TestCase):
+    def test_parse_date_none_and_empty(self):
+        self.assertIsNone(parse_date(None))
+        self.assertIsNone(parse_date(""))
+
+    def test_parse_date_with_Z_and_without(self):
+        dt1 = parse_date("2025-05-01T12:00:00Z")
+        dt2 = parse_date("2025-05-01T12:00:00")
+        expected = datetime(2025,5,1,12,0)
+        self.assertEqual(dt1, expected)
+        self.assertEqual(dt2, expected)
+
+    def test_parse_date_invalid_string(self):
+        self.assertIsNone(parse_date("not-a-date"))
+
+    @patch('home.views.fetch_json')
+    def test_get_active_courses_success(self, mock_fetch):
+        mock_fetch.return_value = [{'id':99}]
+        result = get_active_courses("https://canvas.test", "tok")
+        self.assertEqual(result, [{'id':99}])
+        mock_fetch.assert_called_once()
+
+    @patch('home.views.fetch_json')
+    def test_get_active_courses_failure(self, mock_fetch):
+        mock_fetch.side_effect = requests.RequestException("fail")
+        with self.assertRaises(Exception) as cm:
+            get_active_courses("https://canvas.test", "tok")
+        self.assertIn("Error fetching courses", str(cm.exception))
+
+#Carson's View functions tests
+class ViewFunctionTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='viewuser', password='pass')
+        self.client.login(username='viewuser', password='pass')
+
+    def test_courses_list(self):
+        Module.objects.create(course_name="CourseX", title="M1", description="D1")
+        Module.objects.create(course_name="CourseY", title="M2", description="D2")
+        response = self.client.get(reverse('courses_list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("CourseX", response.context['courses'])
+        self.assertIn("CourseY", response.context['courses'])
+
+    def test_course_detail(self):
+        Event.objects.create(user=self.user, title="A1", description="D1", due_date=datetime(2025,6,1), event_type="assignment", course_name="C1")
+        Module.objects.create(course_name="C1", title="Mod1", description="Desc")
+        response = self.client.get(reverse('course_detail', args=["C1"]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['assignments']), 1)
+        self.assertEqual(len(response.context['modules']), 1)
+
+    def test_assignment_detail(self):
+        ev = Event.objects.create(user=self.user, title="A2", description="Desc2", due_date=datetime(2025,7,1), event_type="test", course_name="C2")
+        response = self.client.get(reverse('assignment_detail', args=[ev.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "A2")
+
+    def test_wipe_saved(self):
+        #Creates data to wipe
+        Event.objects.create(user=self.user, title="X", description="D", due_date=datetime(2025,8,1), event_type="assignment", course_name="C3")
+        Module.objects.create(course_name="C3", title="Mod3", description="Desc3")
+        ModuleItem.objects.create(module=Module.objects.first(), title="Item3", item_type="T")
+        response = self.client.post(reverse('clear_calendar'))
+        self.assertRedirects(response, reverse('calendar_view'))
+        self.assertEqual(Event.objects.count(), 0)
+        self.assertEqual(Module.objects.count(), 0)
+        self.assertEqual(ModuleItem.objects.count(), 0)
+
+
+#fetch_assignments testing
+class FetchAssignmentsViewTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='fetchuser', password='fetchpass')
+        self.client.login(username='fetchuser', password='fetchpass')
+        self.canvas_url = 'https://canvas.example.com'
+        self.api_token = 'token123'
+
+    @patch('home.views.fetch_json')
+    def test_fetch_assignments_creates_events_modules_and_items(self, mock_fetch):
+        def side_effect(url, headers, timeout=10):
+            if 'courses?enrollment_state=active' in url:
+                return [{'id':1, 'name':'Course1'}]
+            if '/assignments?' in url:
+                return [{'name':'Assign2025','due_at':'2025-09-01T00:00:00Z','description':'D1'}, {'name':'Old','due_at':'2024-01-01T00:00:00Z','description':'D0'}]
+            if '/modules?' in url:
+                return [{'id':101,'name':'ModA','description':'MD'}]
+            if '/items' in url:
+                return [{'title':'It1','type':'Page','external_url':'http://x','content':'C1'}]
+            return []
+        mock_fetch.side_effect = side_effect
+
+        response = self.client.post(reverse('fetch_assignments'), {'canvas_url': self.canvas_url, 'api_token': self.api_token})
+        self.assertRedirects(response, reverse('calendar_view'))
+        self.assertEqual(Event.objects.count(), 1)
+        self.assertEqual(Module.objects.count(), 1)
+        self.assertEqual(ModuleItem.objects.count(), 1)
