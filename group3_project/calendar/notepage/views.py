@@ -176,3 +176,52 @@ def summarize_note(request):
 
         except Exception as e:
             return JsonResponse({'summary': 'Error: ' + str(e)}, status=500)
+
+@csrf_exempt
+def multi_note_quiz_page(request):
+    notes = Note.objects.all()
+    return render(request, 'notepage/quiz_page.html', {'notes': notes})
+
+@csrf_exempt
+def generate_multi_note_quiz(request):
+    import json
+    load_dotenv()
+    if request.method == 'POST':
+        try:
+            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            data = json.loads(request.body)
+            note_ids = data.get('note_ids', [])
+            selected_notes = Note.objects.filter(pk__in=note_ids)
+
+            combined_content = "\n\n".join(note.content for note in selected_notes)
+
+            prompt = (
+                "Based on the following notes, generate as many multiple-choice quiz questions as you can. "
+                "Each question should include 1 correct answer and 3 incorrect answers. "
+                "Respond in the following JSON format:\n\n"
+                "{\n"
+                "  \"questions\": [\n"
+                "    {\n"
+                "      \"question\": \"...\",\n"
+                "      \"choices\": [\"...\", \"...\", \"...\", \"...\"],\n"
+                "      \"answer\": \"...\"\n"
+                "    },\n"
+                "    ...\n"
+                "  ]\n"
+                "}\n\n"
+                f"Notes:\n{combined_content}"
+            )
+
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are a helpful quiz generator."},
+                    {"role": "user", "content": prompt}
+                ]
+            )
+
+            quiz = response.choices[0].message.content
+            return JsonResponse({'quiz': quiz})
+
+        except Exception as e:
+            return JsonResponse({'quiz': f'Error: {str(e)}'}, status=500)
