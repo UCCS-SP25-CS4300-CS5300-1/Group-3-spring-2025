@@ -2,97 +2,120 @@
 {% block title %}AI Quiz Generator{% endblock %}
 
 {% block content %}
-  <h2>Select Notes to Generate Quiz</h2>
-  <form id="quiz-form">
-    {% for note in notes %}
-      <div class="form-check">
-        <input class="form-check-input" type="checkbox" value="{{ note.pk }}" id="note{{ note.pk }}">
-        <label class="form-check-label" for="note{{ note.pk }}">
-          {{ note.title }}
-        </label>
-      </div>
-    {% endfor %}
-    <button type="submit" class="btn btn-primary mt-3">Generate Quiz</button>
-  </form>
+<form id="quiz-form" class="mb-4">
+  {% for note in notes %}
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" value="{{ note.pk }}" id="note{{ note.pk }}">
+      <label class="form-check-label" for="note{{ note.pk }}">
+        {{ note.title }}
+      </label>
+    </div>
+  {% endfor %}
+  <button type="submit" class="btn btn-primary mt-3">Generate Quiz</button>
+</form>
 
-  <hr />
-  <div id="quiz-output" class="mt-3"></div>
-  <button id="submit-quiz" class="btn btn-success mt-3" style="display: none;">Submit Answers</button>
-  <div id="quiz-results" class="mt-3"></div>
+<div id="loading-spinner" class="text-center my-4" style="display: none;">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <p>Generating your quiz...</p>
+</div>
+
+<div id="quiz-output" class="mt-3"></div>
+
+<button id="submit-quiz" class="btn btn-success mt-3" style="display: none;">Submit Answers</button>
+
+<div id="quiz-results" class="mt-4"></div>
 
   <script>
-    // Storing the correct answers in an array
+
+    // This stores the correct answers in the array.
     let correctAnswers = [];
-    
-    // This will make a quiz form with the submit button
-    document.getElementById("quiz-form").addEventListener("submit", function (e) {
-      e.preventDefault();
-    
-      const selectedIds = [];
-      document.querySelectorAll("input[type='checkbox']:checked").forEach(cb => {
-        selectedIds.push(cb.value);
-      });
-    
-      // This will call the view that will take the note that is selected for the quiz and output it.
-      fetch("{% url 'generate_note_quiz' %}", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": "{{ csrf_token }}"
-        },
-        body: JSON.stringify({ note_ids: selectedIds })
-      })
-      .then(res => res.json())
-      .then(data => {
-        const quiz = JSON.parse(data.quiz);  
-        correctAnswers = quiz.questions.map(q => q.answer);
-        renderQuiz(quiz.questions);
-        document.getElementById("submit-quiz").style.display = "block";
-      })
-      .catch(err => {
-        document.getElementById("quiz-output").innerText = "Something went wrong.";
-      });
+
+  document.getElementById("quiz-form").addEventListener("submit", function (e) {  
+    e.preventDefault();
+
+    // Show spinner and reset UI.
+    document.getElementById("loading-spinner").style.display = "block";
+    document.getElementById("quiz-output").innerHTML = "";
+    document.getElementById("quiz-results").innerHTML = "";
+    document.getElementById("submit-quiz").style.display = "none";
+
+    // This will store all of the selected answers.
+    const selectedIds = [];
+    document.querySelectorAll("input[type='checkbox']:checked").forEach(cb => {
+      selectedIds.push(cb.value);
     });
-    
-    // This will render the quiz questions specifically by creating the multiple choice buttons, the questions itself,
-    // and the possible answers as well.
-    function renderQuiz(questions) {
-      const container = document.getElementById("quiz-output");
-      container.innerHTML = "";
-      questions.forEach((q, i) => {
-        const qDiv = document.createElement("div");
-        qDiv.classList.add("mb-3");
-        qDiv.innerHTML = `<p><strong>${i + 1}. ${q.question}</strong></p>`;
-        q.choices.forEach(choice => {
-          qDiv.innerHTML += `
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="q${i}" value="${choice}">
-              <label class="form-check-label">${choice}</label>
-            </div>
-          `;
-        });
-        container.appendChild(qDiv);
-      });
+
+    // This will make sure that you select at least one note to generate a quiz on.
+    if (selectedIds.length === 0) {
+      alert("Please select at least one note.");
+      document.getElementById("loading-spinner").style.display = "none";
+      return;
     }
-    
-    // When the quiz answers are submitted, this will display a score, the correct, and incorrect answers that the user selected.
-    document.getElementById("submit-quiz").addEventListener("click", () => {
-      const resultBox = document.getElementById("quiz-results");
-      let score = 0;
-      resultBox.innerHTML = "<h4>Results</h4><ul>";
-      
-      correctAnswers.forEach((correct, i) => {
-        const selected = document.querySelector(`input[name="q${i}"]:checked`);
-        const answer = selected ? selected.value : "No answer";
-        const correctStr = answer === correct ? "✅" : "❌";
-    
-        if (answer === correct) score++;
-        resultBox.innerHTML += `
-          <li>${correctStr} Question ${i + 1}: Your answer: <strong>${answer}</strong>, Correct: <strong>${correct}</strong></li>
+
+    // THis will fetch the view to send the contents of the note and make the quiz.
+    fetch("{% url 'generate_multi_note_quiz' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": "{{ csrf_token }}"
+      },
+      body: JSON.stringify({ note_ids: selectedIds })
+    })
+    .then(res => res.json())
+    .then(data => {
+      const quiz = JSON.parse(data.quiz); 
+      correctAnswers = quiz.questions.map(q => q.answer);
+      renderQuiz(quiz.questions);
+      document.getElementById("submit-quiz").style.display = "block";
+    })
+    .catch(err => {
+      document.getElementById("quiz-output").innerText = "Something went wrong.";
+    })
+    .finally(() => {
+      document.getElementById("loading-spinner").style.display = "none";
+    });
+  });
+
+  // This function will render the quiz. After the quiz is generated from OpenAI, it will then create the multiple choice questions for the user to select.
+  function renderQuiz(questions) {
+    const container = document.getElementById("quiz-output");
+    container.innerHTML = "";
+    questions.forEach((q, i) => {
+      const qDiv = document.createElement("div");
+      qDiv.classList.add("mb-3");
+      qDiv.innerHTML = `<p><strong>${i + 1}. ${q.question}</strong></p>`;
+      q.choices.forEach(choice => {
+        qDiv.innerHTML += `
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="q${i}" value="${choice}" id="q${i}_${choice}">
+            <label class="form-check-label" for="q${i}_${choice}">${choice}</label>
+          </div>
         `;
       });
-    
-      resultBox.innerHTML += `</ul><p><strong>Score: ${score} / ${correctAnswers.length}</strong></p>`;
+      container.appendChild(qDiv);
     });
+  }
+
+  // This is for the submit button once the user has submitted the answers.
+  document.getElementById("submit-quiz").addEventListener("click", () => {
+    const resultBox = document.getElementById("quiz-results");
+    let score = 0;
+    resultBox.innerHTML = "<h4>Results</h4><ul>";
+
+  // After the answer is submitted, it will then go through each question and show the user the correct and incorrect scores along with a score out of however many questions were answered correctly.
+  correctAnswers.forEach((correct, i) => {
+      const selected = document.querySelector(`input[name="q${i}"]:checked`);
+      const answer = selected ? selected.value : "No answer";
+      const correctStr = answer === correct ? "✅" : "❌";
+      if (answer === correct) score++;
+      resultBox.innerHTML += `
+        <li>${correctStr} Question ${i + 1}: Your answer: <strong>${answer}</strong>, Correct: <strong>${correct}</strong></li>
+      `;
+    });
+
+    resultBox.innerHTML += `</ul><p><strong>Score: ${score} / ${correctAnswers.length}</strong></p>`;
+  });
     </script>
 {% endblock %}

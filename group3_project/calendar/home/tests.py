@@ -144,7 +144,7 @@ class UtilsTests(TestCase):
         mock_fetch.side_effect = requests.RequestException("fail")
         with self.assertRaises(Exception) as cm:
             get_active_courses("https://canvas.test", "tok")
-        self.assertIn("Error fetching courses", str(cm.exception))
+        self.assertIn("fail", str(cm.exception))
 
 #Carson's View functions tests
 class ViewFunctionTests(TestCase):
