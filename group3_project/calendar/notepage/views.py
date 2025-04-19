@@ -184,7 +184,7 @@ def multi_note_quiz_page(request):
 
 @csrf_exempt
 def generate_multi_note_quiz(request):
-    import json
+    
     load_dotenv()
     if request.method == 'POST':
         try:

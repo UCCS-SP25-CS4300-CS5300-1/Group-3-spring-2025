@@ -13,5 +13,5 @@ urlpatterns = [
     path('api/notes/<int:pk>/content/', views.get_note_content, name='get_note_content'),
     path('api/summarize/', views.summarize_note, name='summarize_note'),
     path('quiz/', views.multi_note_quiz_page, name='multi_note_quiz_page'),
-    path('api/generate_multi_note_quiz/', views.generate_multi_note_quiz, name='generate_note_quiz'),
+    path('api/generate_multi_note_quiz/', views.generate_multi_note_quiz, name='generate_multi_note_quiz'),
 ]
