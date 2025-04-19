@@ -34,7 +34,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-@+yu7z2i^)0&wfn)iafs!*3&r^z_af@)hme0%le$itmaj*ok%v'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['app-abarrag4-5.devedu.io', 'editor-ashleeparadis-5.devedu.io', 'app-ashleeparadis-5.devedu.io','app-carsoncontainer-5.devedu.io','app-bgoins-5.devedu.io','editor-carsoncontainer-5.devedu.io','calendai.up.railway.app' ]
 
@@ -126,11 +126,11 @@ CSRF_TRUSTED_ORIGINS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)

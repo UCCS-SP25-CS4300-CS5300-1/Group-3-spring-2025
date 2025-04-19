@@ -18,6 +18,9 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
+from .forms import EventForm
+from django.utils import timezone
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -38,19 +41,18 @@ def fetch_json(url, headers):
 @csrf_exempt
 def clear_calendar(request):
     if request.method == "POST":
-        Event.objects.all().delete()
+        Event.objects.all().filter(user=request.user).delete()
         messages.success(request, "All events have been cleared.")
     else:
         messages.error(request, "Invalid request.")
     #Redirect back to calendar view.
-    return redirect('calendar_view')
+    return redirect('calendar')
 
 @csrf_exempt
 def index(request):
     return render(request, 'home/index.html')
     
 #Calendar view
-@csrf_exempt
 @login_required
 def calendar_view(request):
     events = list(Event.objects.filter(user=request.user).values("course_name", "title", "event_type", "due_date"))
@@ -164,7 +166,8 @@ def fetch_assignments(request):
                 module_objs.append(Module(
                     title=mod_title,
                     course_name=cname,
-                    description=m.get("description") or ""
+                    user=request.user,
+                    description=m.get("description") or "",
                 ))
                 module_jobs.append((cid, cname, m["id"], mod_title))
 
@@ -229,14 +232,14 @@ def fetch_assignments(request):
 #Course list view
 @csrf_exempt
 def courses_list(request):
-    courses = Module.objects.values_list('course_name', flat=True).distinct()
+    courses = Module.objects.filter(user=request.user).values_list('course_name', flat=True).distinct()
     return render(request, "home/courses_list.html", {"courses": courses})
 
 #Course details view
 @csrf_exempt
 def course_detail(request, course_name):
-    assignments = Event.objects.filter(course_name=course_name, event_type="assignment").order_by('due_date')
-    modules = Module.objects.filter(course_name=course_name)
+    assignments = Event.objects.filter(course_name=course_name, event_type="assignment", user=request.user).order_by('due_date')
+    modules = Module.objects.filter(course_name=course_name, user=request.user)
     return render(request, "home/course_detail.html", {
         "course_name": course_name,
         "assignments": assignments,
@@ -255,11 +258,11 @@ def assignment_detail(request, assignment_id):
 def wipe_saved(request):
     if request.method == "POST":
         #Clears all Calendar events
-        Event.objects.all().delete()
+        Event.objects.all().filter(user=request.user).delete()
         #Clears all modules
-        Module.objects.all().delete()
+        Module.objects.all().filter(user=request.user).delete()
         #Clears module items
-        ModuleItem.objects.all().delete()
+        ModuleItem.objects.all().filter(user=request.user).delete()
         messages.success(request, "All saved events and modules have been wiped.")
     else:
         messages.error(request, "Invalid request.")
@@ -281,3 +284,18 @@ def register(request):
 @login_required
 def index(request):
     return render(request, 'home/index.html')
+
+@login_required
+def add_event(request):
+    if request.method == 'POST':
+        form = EventForm(request.POST)
+        if form.is_valid():
+            
+            event = form.save(commit=False)
+            event.user = request.user  
+            event.save()
+
+    else:
+        form = EventForm()
+
+    return render(request, 'home/add_event.html', {'form': form})
