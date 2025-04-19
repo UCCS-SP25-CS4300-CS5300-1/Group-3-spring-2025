@@ -151,6 +151,10 @@ def fetch_assignments(request):
 
             for a in assignments_by_course.get(cid, []):
                 due = parse_date(a.get("due_at") or "")
+
+                #Holder var for assignment time for Ashlee
+                assignment_time = due
+                
                 if due and due.year == current_year:
                     event_objs.append(Event(
                         user=request.user,
