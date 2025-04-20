@@ -148,6 +148,14 @@ class FileImportTestCase(TestCase):
         self.assertIn("<h1>Markdown Test</h1>", html_content)
         self.assertIn("<strong>Bold text</strong>", html_content)
 
+    def test_import_pdf_file(self):
+        # VERY simple PDF with binary data. Test basically checks if it can upload - nothing with formatting
+        file = SimpleUploadedFile("test.pdf", b"%PDF-1.0 test data")
+        
+        response = self.client.post(reverse('import_file'), {'file': file})
+        
+        self.assertTrue(Note.objects.filter(title='test').exists())
+
 class AISummarizationTestCase(TestCase):
     def setUp(self):
         self.client = Client()

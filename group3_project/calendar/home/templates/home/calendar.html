@@ -104,7 +104,9 @@
       var calendarEvents = eventsData.map(function(event) {
         var days = getDaysUntil(event.due_date);
         var bgColor;
-        if (days <= 3) {
+        if (days < 0) {
+          bgColor = "#847e7e"
+        } else if (days <= 3) {
           bgColor = "#e05045";
         } else if (days > 3 && days <= 7) {
           bgColor = "#f0ec2e";

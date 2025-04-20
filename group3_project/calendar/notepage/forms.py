@@ -22,7 +22,7 @@ class NoteForm(forms.ModelForm):
 class FileImportForm(forms.Form):
     file = forms.FileField(
         label='Select a file to import',
-        help_text='Maximum file size is 5MB',
+        help_text='Maximum file size is 5MB, and allowed file types are: .txt, .docx, .md',
         widget=forms.FileInput(attrs={'class': 'form-control'})
     )
     tags = forms.CharField(
@@ -33,3 +33,14 @@ class FileImportForm(forms.Form):
             'data-role': 'tagsinput'
         })
     )
+
+    def check_file(self):
+        file = self.cleaned_data.get('file')
+        if file:
+            ext = os.path.splitext(file.name)[1].lower()
+
+            allow_ext = ['.txt, .docx, .md']
+
+            if ext not in allow_ext:
+                raise ValidationError(f'Unsupported file extension. Allowed types are: {", ".join(allow_ext)}')
+        return file

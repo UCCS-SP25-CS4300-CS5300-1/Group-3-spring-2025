@@ -281,3 +281,6 @@ def register(request):
 @login_required
 def index(request):
     return render(request, 'home/index.html')
+
+def home_settings(request):
+    return render(request, 'home/home_settings.html')

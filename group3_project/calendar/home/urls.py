@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .views import index, fetch_assignments, calendar_view, clear_calendar, courses_list, course_detail, assignment_detail, wipe_saved, register
+from .views import *
 from django.contrib.auth import views as auth_views
 from . import views as home_views
 
@@ -15,5 +15,6 @@ urlpatterns = [
     path('course/<str:course_name>/', course_detail, name='course_detail'),
     path('assignment/<int:assignment_id>/', assignment_detail, name='assignment_detail'),
     path('wipe_saved/', wipe_saved, name='wipe_saved'),
+    path('home_settings/', home_settings, name='home_settings'),
 ]
 
