@@ -144,10 +144,6 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Log in to Safety
-        run: |
-          safety login --token ${{ secrets.SAFETY_API_KEY }}
-
       - name: Run Safety check
         run: |
-          safety scan --file=requirements.txt --full-report
+          safety scan --key ${{ secrets.SAFETY_API_KEY }} --file=requirements.txt --full-report
