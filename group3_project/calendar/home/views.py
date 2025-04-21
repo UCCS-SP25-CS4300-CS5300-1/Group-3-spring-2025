@@ -21,6 +21,9 @@ from django.contrib.auth.decorators import login_required
 from .forms import EventForm
 from django.utils import timezone
 from datetime import datetime
+from django.conf import settings
+import pytz
+
 
 logger = logging.getLogger(__name__)
 
@@ -150,11 +153,8 @@ def fetch_assignments(request):
             cname = c.get("name", "Unknown Course")
 
             for a in assignments_by_course.get(cid, []):
-                due = parse_date(a.get("due_at") or "")
+                due = parse_date(a.get("due_at") or "") 
 
-                #Holder var for assignment time for Ashlee
-                assignment_time = due
-                
                 if due and due.year == current_year:
                     event_objs.append(Event(
                         user=request.user,
@@ -303,3 +303,6 @@ def add_event(request):
         form = EventForm()
 
     return render(request, 'home/add_event.html', {'form': form})
+
+def user_settings(request):
+    return render(request, "home/settings.html")

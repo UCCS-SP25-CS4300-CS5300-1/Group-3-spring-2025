@@ -112,7 +112,7 @@
           bgColor = "#3cda49";
         }
         return {
-          title: moment(event.due_date).format('h:mma') + " " + event.title + " (" + event.event_type + ")" + " - " + event.course_name,
+          title: moment(event.due_date).local().format('h:mma') + " " + event.title + " (" + event.event_type + ")" + " - " + event.course_name,
           start: event.due_date,
           allDay: true,
           textColor: "black",
