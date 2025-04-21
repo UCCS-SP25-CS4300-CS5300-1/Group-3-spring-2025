@@ -146,4 +146,4 @@ jobs:
 
       - name: Run Safety check
         run: |
-          safety check --full-report
+          safety scan --file=requirements.txt --full-report
