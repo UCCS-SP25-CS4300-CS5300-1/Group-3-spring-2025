@@ -35,5 +35,5 @@ typing_extensions==4.13.1
 urllib3==2.3.0
 wheel==0.42.0
 gunicorn==20.1.0
-flake8=7.0.0
+flake8==7.0.0
 safety==3.3.1
