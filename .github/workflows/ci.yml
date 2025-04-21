@@ -144,6 +144,8 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Safety check
-        run: |
-          safety scan --key ${{ secrets.SAFETY_API_KEY }} --file=requirements.txt --full-report
+      - name: Run Safety Scan
+        uses: pyupio/safety-action@v1
+        with:
+          api-key: ${{ secrets.SAFETY_API_KEY }}
+          requirements: group3_project/calendar/requirements.txt
