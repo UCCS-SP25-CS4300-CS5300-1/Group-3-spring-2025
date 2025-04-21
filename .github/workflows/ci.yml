@@ -126,24 +126,24 @@ jobs:
   ################################################################
 # 4. Dependency Vulnerability Scan
 ################################################################
-dependency-scan:
-  name: Dependency Vulnerability Scan
-  runs-on: ubuntu-latest
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
 
-  steps:
-    - name: Check out code
-      uses: actions/checkout@v3
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.12.3'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12.3'
 
-    - name: Install dependencies
-      run: |
-        pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
 
-    - name: Run Safety check
-      run: |
-        safety check --full-report
+      - name: Run Safety check
+        run: |
+          safety check --full-report
