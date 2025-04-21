@@ -149,3 +149,6 @@ jobs:
         with:
           api-key: ${{ secrets.SAFETY_API_KEY }}
           requirements: group3_project/calendar/requirements.txt
+
+      - name: Exit 0
+        run: exit 0
