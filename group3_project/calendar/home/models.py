@@ -16,6 +16,7 @@ class Event(models.Model):
     due_date = models.DateTimeField()
     event_type = models.CharField(max_length=10, choices=EVENT_TYPES)
     course_name = models.CharField(max_length=100, null=True)
+    custom = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.title} ({self.get_event_type_display()})"

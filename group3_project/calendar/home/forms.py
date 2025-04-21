@@ -30,9 +30,3 @@ class EventForm(forms.ModelForm):
         choices = [(cn, cn) for cn in existing]
         choices.insert(0, ("", "--- Select a course ---"))
         self.fields['course_name'].choices = choices
-
-    def clean_due_date(self):
-        due_date = self.cleaned_data.get('due_date')
-        due_date = due_date + timedelta(hours=6)
-
-        return due_date

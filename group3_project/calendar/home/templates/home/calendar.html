@@ -111,19 +111,36 @@
         } else {
           bgColor = "#3cda49";
         }
-        return {
-          title: moment(event.due_date).local().format('h:mma') + " " + event.title + " (" + event.event_type + ")" + " - " + event.course_name,
-          start: event.due_date,
-          allDay: true,
-          textColor: "black",
-          backgroundColor: bgColor,
-          extendedProps: {
-            description: event.description,
-            courseName: event.course_name,
-            dueDate: event.due_date,
-            eventName: event.title
+        if(event.custom) {
+            return {
+              title: moment(event.due_date).utc().format('h:mma') + " " + event.title + " (" + event.event_type + ")" + " - " + event.course_name,
+              start: event.due_date,
+              allDay: true,
+              textColor: "black",
+              backgroundColor: bgColor,
+              extendedProps: {
+                description: event.description,
+                courseName: event.course_name,
+                dueDate: event.due_date,
+                eventName: event.title
+              }
+            };
           }
-        };
+        else {
+            return {
+                  title: moment(event.due_date).format('h:mma') + " " + event.title + " (" + event.event_type + ")" + " - " + event.course_name,
+                  start: event.due_date,
+                  allDay: true,
+                  textColor: "black",
+                  backgroundColor: bgColor,
+                  extendedProps: {
+                    description: event.description,
+                    courseName: event.course_name,
+                    dueDate: event.due_date,
+                    eventName: event.title
+                  }
+            };
+          }
       });
       var calendarEl = document.getElementById("calendar");
       var currentYear = new Date().getFullYear();

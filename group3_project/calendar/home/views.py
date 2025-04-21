@@ -44,12 +44,12 @@ def fetch_json(url, headers):
 @csrf_exempt
 def clear_calendar(request):
     if request.method == "POST":
-        Event.objects.all().filter(user=request.user).delete()
+        Event.objects.filter(user=request.user).delete()
         messages.success(request, "All events have been cleared.")
     else:
         messages.error(request, "Invalid request.")
     #Redirect back to calendar view.
-    return redirect('calendar')
+    return redirect('calendar_view')
 
 @csrf_exempt
 def index(request):
@@ -58,7 +58,7 @@ def index(request):
 #Calendar view
 @login_required
 def calendar_view(request):
-    events = list(Event.objects.filter(user=request.user).values("course_name", "title", "event_type", "due_date"))
+    events = list(Event.objects.filter(user=request.user).values("course_name", "title", "event_type", "due_date", "custom"))
     events_json = json.dumps(events, cls=DjangoJSONEncoder)
     return render(request, "home/calendar.html", {"events_json": events_json})
 
@@ -79,7 +79,10 @@ def parse_date(date_str):
 def get_active_courses(canvas_url, api_token):
     url     = f"{canvas_url}/api/v1/courses?enrollment_state=active&per_page=100"
     headers = {"Authorization": f"Bearer {api_token}"}
-    return fetch_json(url, headers)
+    try:
+        return fetch_json(url, headers)
+    except Exception as e:
+        raise Exception(f"Error fetching courses: {e}")
 
 #Fetches all assignments and modules
 @csrf_exempt
@@ -262,11 +265,11 @@ def assignment_detail(request, assignment_id):
 def wipe_saved(request):
     if request.method == "POST":
         #Clears all Calendar events
-        Event.objects.all().filter(user=request.user).delete()
+        Event.objects.filter(user=request.user).delete()
         #Clears all modules
-        Module.objects.all().filter(user=request.user).delete()
+        Module.objects.filter(user=request.user).delete()
         #Clears module items
-        ModuleItem.objects.all().filter(user=request.user).delete()
+        ModuleItem.objects.filter(module__user=request.user).delete()
         messages.success(request, "All saved events and modules have been wiped.")
     else:
         messages.error(request, "Invalid request.")
@@ -297,11 +300,12 @@ def add_event(request):
             
             event = form.save(commit=False)
             event.user = request.user  
+            event.custom = True
             event.save()
-
+        
+        return redirect('calendar_view')   
     else:
         form = EventForm()
-
     return render(request, 'home/add_event.html', {'form': form})
 
 def user_settings(request):
