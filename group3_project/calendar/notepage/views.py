@@ -155,11 +155,9 @@ def get_note_content(request, pk):
 
 @csrf_exempt
 def summarize_note(request):
-    load_dotenv()
-    
     if request.method == 'POST':
-        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         try:
+            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
             data = json.loads(request.body)
             content = data.get('content', '')
 
@@ -184,8 +182,6 @@ def multi_note_quiz_page(request):
 
 @csrf_exempt
 def generate_multi_note_quiz(request):
-    
-    load_dotenv()
     if request.method == 'POST':
         try:
             client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
