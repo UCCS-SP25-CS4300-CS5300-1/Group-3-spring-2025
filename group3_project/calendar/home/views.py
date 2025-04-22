@@ -295,7 +295,7 @@ def index(request):
 @login_required
 def add_event(request):
     if request.method == 'POST':
-        form = EventForm(request.POST)
+        form = EventForm(request.POST, user=request.user)
         if form.is_valid():
             
             event = form.save(commit=False)
@@ -305,7 +305,7 @@ def add_event(request):
         
         return redirect('calendar_view')   
     else:
-        form = EventForm()
+        form = EventForm(user=request.user)
     return render(request, 'home/add_event.html', {'form': form})
 
 def user_settings(request):
