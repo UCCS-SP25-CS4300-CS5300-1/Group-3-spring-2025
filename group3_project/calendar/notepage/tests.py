@@ -58,6 +58,7 @@ class NoteTestCase(TestCase):
             'tags': 'updated,note'
         })
         self.test_note.refresh_from_db()
+        print(self.test_note.title)
         self.assertEqual(self.test_note.title, 'Updated note')
         self.test_note.tags.set(['updated', 'note'])
         self.assertIn('updated', self.test_note.tags.names())
