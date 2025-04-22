@@ -1,53 +1,95 @@
 {% extends "home/base.html" %}
 {% load static %}
 
-{% block title %}Home - Calendai{% endblock %}
+{% block title %}Home – Calendai{% endblock %}
+
+{# ─────────────────────────────
+   If your base.html doesn’t already include Tailwind, be sure to import it there.
+   ───────────────────────────── #}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-  <header class="text-center mb-8">
-    <h1 class="text-4xl font-bold">Calendai</h1>
-    <p class="text-gray-600">Your Canvas assignment tracker</p>
-  </header>
+<div class="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
 
-  <section class="bg-white shadow-md rounded-lg p-6 mb-8">
-    <h2 class="text-2xl font-semibold mb-4">Getting Started</h2>
-    <ol class="list-decimal list-inside space-y-2 text-gray-700">
-      <li>Sign into Canvas and copy the URL from your browser.</li>
-      <li>In Canvas, go to <strong>Account &rarr; Settings &rarr; Approved Integrations</strong>.</li>
-      <li>Generate a new Access Token and copy it.</li>
-      <li>Paste the Canvas URL and API Token in the form below to fetch your assignments.</li>
-    </ol>
-  </section>
+  <main class="w-full max-w-3xl mx-4 sm:mx-6 backdrop-blur-xl bg-white/70 dark:bg-gray-900/40 rounded-3xl shadow-2xl ring-1 ring-indigo-100 dark:ring-gray-700">
+    <!-- Hero -->
+    <header class="text-center px-10 py-12">
+      <h1 class="text-5xl font-extrabold tracking-tight text-indigo-600 dark:text-indigo-400 mb-3">
+        Calendai
+      </h1>
+      <p class="text-lg text-gray-600 dark:text-gray-300">
+        Your one‑click Canvas assignment tracker
+      </p>
+    </header>
 
-  <section class="bg-white shadow-md rounded-lg p-6 mb-8">
-    <h2 class="text-2xl font-semibold mb-4">Connect to Canvas</h2>
-    <div class="space-y-4">
-      <form method="post" action="{% url 'fetch_assignments' %}" class="inline-block w-full sm:w-auto">
+    <!-- Getting started -->
+    <section class="border-t border-indigo-100 dark:border-gray-700 px-10 py-10">
+      <h2 class="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">
+        Getting Started
+      </h2>
+      <ol class="space-y-3 list-decimal list-inside text-gray-700 dark:text-gray-300">
+        <li>Log into <span class="font-medium">Canvas</span> and copy your domain (e.g. <code class="px-1 py-0.5 bg-indigo-100 text-indigo-700 dark:bg-indigo-700/30 dark:text-indigo-200 rounded">https://school.instructure.com</code>).</li>
+        <li>Navigate to <strong>Account → Settings → Approved Integrations</strong>.</li>
+        <li>Create a new <span class="font-medium">Access Token</span> and copy it.</li>
+        <li>Paste the URL &amp; token below, then hit <span class="font-medium">Fetch Assignments</span>.</li>
+      </ol>
+    </section>
+
+    <!-- Form -->
+    <section class="border-t border-indigo-100 dark:border-gray-700 px-10 py-10">
+      <h2 class="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">
+        Connect to Canvas
+      </h2>
+
+      <!-- Fetch form -->
+      <form method="post" action="{% url 'fetch_assignments' %}" class="grid sm:grid-cols-2 gap-4 mb-6">
         {% csrf_token %}
-        <button type="submit" class="px-6 py-2 bg-indigo-600 text-black rounded-md hover:bg-indigo-700">
-          Fetch Assignments
+        <input
+          type="url"
+          name="canvas_url"
+          placeholder="Canvas URL"
+          required
+          class="col-span-2 sm:col-span-1 w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200" />
+
+        <input
+          type="text"
+          name="api_token"
+          placeholder="API Token"
+          required
+          class="col-span-2 sm:col-span-1 w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200" />
+
+        <button
+          type="submit"
+          class="col-span-2 inline-flex items-center justify-center gap-2 px-6 py-3 font-medium rounded-lg bg-indigo-600 text-black hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-indigo-500 dark:text-gray-900">
+          <span class="material-symbols-outlined -ml-1">sync</span>
+          Fetch Assignments
         </button>
       </form>
-      <form method="post" action="{% url 'wipe_saved' %}" class="inline-block w-full sm:w-auto">
+
+      <!-- Wipe form -->
+      <form method="post" action="{% url 'wipe_saved' %}" onsubmit="return confirm('Are you sure you want to remove all saved data?');">
         {% csrf_token %}
-        <button type="submit" class="px-6 py-2 bg-red-500 text-black rounded-md hover:bg-red-600">
-          Wipe Saved Data
+        <button
+          type="submit"
+          class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 font-medium rounded-lg bg-red-500 text-black hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-400 dark:bg-red-600 dark:text-gray-100">
+          <span class="material-symbols-outlined -ml-1">delete</span>
+          Wipe Saved Data
         </button>
       </form>
-    </div>
-  </section>
+    </section>
 
-  <footer class="text-center text-sm text-gray-500">
-    <p>
-      Created by <a href="#" class="text-indigo-600 hover:underline">Alejandro Barragan Solis</a>,
-      <a href="#" class="text-indigo-600 hover:underline">Carson King</a>,
-      <a href="#" class="text-indigo-600 hover:underline">Brian Goins</a>,
-      <a href="#" class="text-indigo-600 hover:underline">Aidan Meshberg</a>,
-      <a href="#" class="text-indigo-600 hover:underline">Ashlee Paradis</a>
-    </p>
-    <p>Last updated: April 22, 2025</p>
-  </footer>
+    <!-- Footer -->
+    <footer class="border-t border-indigo-100 dark:border-gray-700 text-center text-sm text-gray-500 dark:text-gray-400 px-10 py-6">
+      <p class="mb-1">
+        Built with ❤️ by
+        <a href="#" class="text-indigo-600 dark:text-indigo-400 hover:underline">Alejandro Barragan Solis</a>,
+        <a href="#" class="text-indigo-600 dark:text-indigo-400 hover:underline">Carson King</a>,
+        <a href="#" class="text-indigo-600 dark:text-indigo-400 hover:underline">Brian Goins</a>,
+        <a href="#" class="text-indigo-600 dark:text-indigo-400 hover:underline">Aidan Meshberg</a>,
+        <a href="#" class="text-indigo-600 dark:text-indigo-400 hover:underline">Ashlee Paradis</a>
+      </p>
+      <p>Last updated: April 22, 2025</p>
+    </footer>
+  </main>
 </div>
 {% endblock %}
 
