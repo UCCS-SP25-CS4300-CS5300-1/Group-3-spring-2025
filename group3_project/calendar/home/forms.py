@@ -20,13 +20,13 @@ class EventForm(forms.ModelForm):
         fields = ['title', 'description', 'due_date', 'event_type', 'course_name']
 
     def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        existing = (
-            Event.objects.exclude(course_name__isnull=True)
-                         .exclude(course_name__exact='')
-                         .values_list('course_name', flat=True)
-                         .distinct()
-        )
-        choices = [(cn, cn) for cn in existing]
-        choices.insert(0, ("", "--- Select a course ---"))
-        self.fields['course_name'].choices = choices
+        if user:
+            courses = Event.objects.filter(user=user).exclude(course_name__isnull=True).exclude(course_name__exact='').values_list('course_name', flat=True).distinct()
+
+            choices = [(course, course) for course in courses]
+
+            choices.insert(0, ("", "--- Select a course ---"))
+
+            self.fields['course_name'].choices = choices
