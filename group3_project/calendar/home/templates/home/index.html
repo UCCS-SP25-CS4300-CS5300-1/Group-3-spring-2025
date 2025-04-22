@@ -22,26 +22,20 @@
 
   <section class="bg-white shadow-md rounded-lg p-6 mb-8">
     <h2 class="text-2xl font-semibold mb-4">Connect to Canvas</h2>
-    <form method="post" action="{% url 'fetch_assignments' %}" class="space-y-4">
-      {% csrf_token %}
-      <div>
-        <label for="canvas_url" class="block text-sm font-medium text-gray-700">Canvas URL</label>
-        <input type="url" name="canvas_url" id="canvas_url" required placeholder="https://canvas.yourschool.edu"
-               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-      </div>
-      <div>
-        <label for="api_token" class="block text-sm font-medium text-gray-700">API Token</label>
-        <input type="password" name="api_token" id="api_token" required placeholder="Enter your API token"
-               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-      </div>
-      <div class="flex space-x-4">
-        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Fetch Assignments</button>
-        <form method="post" action="{% url 'wipe_saved' %}">
-          {% csrf_token %}
-          <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">Wipe Saved Data</button>
-        </form>
-      </div>
-    </form>
+    <div class="space-y-4">
+      <form method="post" action="{% url 'fetch_assignments' %}" class="inline-block w-full sm:w-auto">
+        {% csrf_token %}
+        <button type="submit" class="px-6 py-2 bg-indigo-600 text-black rounded-md hover:bg-indigo-700">
+          Fetch Assignments
+        </button>
+      </form>
+      <form method="post" action="{% url 'wipe_saved' %}" class="inline-block w-full sm:w-auto">
+        {% csrf_token %}
+        <button type="submit" class="px-6 py-2 bg-red-500 text-black rounded-md hover:bg-red-600">
+          Wipe Saved Data
+        </button>
+      </form>
+    </div>
   </section>
 
   <footer class="text-center text-sm text-gray-500">
@@ -52,7 +46,7 @@
       <a href="#" class="text-indigo-600 hover:underline">Aidan Meshberg</a>,
       <a href="#" class="text-indigo-600 hover:underline">Ashlee Paradis</a>
     </p>
-    <p>Last updated: April 21, 2025</p>
+    <p>Last updated: April 22, 2025</p>
   </footer>
 </div>
 {% endblock %}
