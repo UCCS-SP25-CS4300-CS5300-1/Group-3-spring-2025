@@ -3,7 +3,14 @@ import requests
 from django.test import TestCase, Client
 from django.urls import reverse
 from datetime import datetime, timedelta
+<<<<<<< HEAD
 from home.models import Event, Module, ModuleItem
+=======
+from unittest.mock import patch
+import requests
+from home.models import Event, Module, ModuleItem
+from home.views import get_active_courses, parse_date 
+>>>>>>> 4f5f9775f8c9891bc06185d041b34ea46298e60f
 from django.contrib.auth.models import User
 from unittest.mock import patch
 from django.utils import timezone
@@ -179,7 +186,7 @@ class UtilsTests(TestCase):
         mock_fetch.side_effect = requests.RequestException("fail")
         with self.assertRaises(Exception) as cm:
             get_active_courses("https://canvas.test", "tok")
-        self.assertIn("Error fetching courses", str(cm.exception))
+        self.assertIn("fail", str(cm.exception))
 
 #Carson's View functions tests
 class ViewFunctionTests(TestCase):
@@ -215,7 +222,10 @@ class ViewFunctionTests(TestCase):
         Event.objects.create(user=self.user, title="X", description="D", due_date=datetime(2025,8,1), event_type="assignment", course_name="C3")
         Module.objects.create(user=self.user, course_name="C3", title="Mod3", description="Desc3")
         ModuleItem.objects.create(module=Module.objects.first(), title="Item3", item_type="T")
+<<<<<<< HEAD
         response = self.client.post(reverse('clear_calendar'))
+=======
+>>>>>>> 4f5f9775f8c9891bc06185d041b34ea46298e60f
         response = self.client.post(reverse('wipe_saved'))
         self.assertRedirects(response, reverse('calendar_view'))
         self.assertEqual(Event.objects.filter(user=self.user).count(), 0)

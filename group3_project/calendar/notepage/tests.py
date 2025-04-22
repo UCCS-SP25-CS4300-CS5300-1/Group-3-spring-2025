@@ -187,3 +187,66 @@ class AISummarizationTestCase(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn('summary', response.json())  
+
+class MultiNoteQuizTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.url = reverse('generate_multi_note_quiz')
+        self.note1 = Note.objects.create(title="Note 1", content="Content about Python")
+        self.note2 = Note.objects.create(title="Note 2", content="Content about Django")
+
+    @patch('notepage.views.OpenAI')
+    def test_generate_quiz_success(self, mock_openai):
+        mock_client = mock_openai.return_value
+        mock_client.chat.completions.create.return_value = type('obj', (object,), {
+            'choices': [type('obj', (object,), {
+                'message': type('obj', (object,), {
+                    'content': '{"questions":[{"question":"What is Dog?","choices":["A human","An animal","A program","A food"],"answer":"A language"}]}'
+                })
+            })]
+        })()
+
+        response = self.client.post(self.url, json.dumps({
+            'note_ids': [self.note1.id, self.note2.id]
+        }), content_type='application/json')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('quiz', response.json())
+        self.assertIn('questions', json.loads(response.json()['quiz']))
+
+    @patch('notepage.views.OpenAI')
+    def test_generate_quiz_empty_note_ids(self, mock_openai):
+        mock_openai.return_value.chat.completions.create.return_value = type('obj', (object,), {
+            'choices': [type('obj', (object,), {
+                'message': type('obj', (object,), {
+                    'content': '{"questions":[]}'
+                })
+            })]
+        })  ()
+
+        response = self.client.post(self.url, json.dumps({
+            'note_ids': []
+        }), content_type='application/json')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('quiz', response.json())
+
+    def test_generate_quiz_invalid_request(self):
+        response = self.client.post(self.url, json.dumps({
+            'invalid_field': [123]
+        }), content_type='application/json')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('quiz', response.json())
+
+    @patch('notepage.views.OpenAI')
+    def test_generate_quiz_openai_failure(self, mock_openai):
+        mock_openai.side_effect = Exception("Mock OpenAI error")
+
+        response = self.client.post(self.url, json.dumps({
+            'note_ids': [self.note1.id]
+        }), content_type='application/json')
+
+        self.assertEqual(response.status_code, 500)
+        self.assertIn('quiz', response.json())
+        self.assertTrue(response.json()['quiz'].startswith("Error"))
