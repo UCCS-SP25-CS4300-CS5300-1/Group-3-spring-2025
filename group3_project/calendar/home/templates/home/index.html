@@ -3,92 +3,97 @@
 
 {% block title %}Home – Calendai{% endblock %}
 
-
-
 {% block content %}
-<div class="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+<!-- Full‑height pastel gradient backdrop -->
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-fuchsia-200 via-indigo-100 to-sky-200 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
 
-  <main class="w-full max-w-3xl mx-4 sm:mx-6 backdrop-blur-xl bg-white/70 dark:bg-gray-900/40 rounded-3xl shadow-2xl ring-1 ring-indigo-100 dark:ring-gray-700">
-    <!-- Hero -->
-    <header class="text-center px-10 py-12">
-      <h1 class="text-5xl font-extrabold tracking-tight text-indigo-600 dark:text-indigo-400 mb-3">
-        Calendai
-      </h1>
-      <p class="text-lg text-gray-600 dark:text-gray-300">
-        Your one‑click Canvas assignment tracker
-      </p>
-    </header>
+  <!-- Floating glass card with abstract blobs -->
+  <main class="relative w-full max-w-3xl mx-4 sm:mx-6">
+    <!-- blurred blobs for extra flair -->
+    <div class="pointer-events-none absolute -top-32 -left-32 w-96 h-96 bg-pink-400 opacity-20 blur-3xl rounded-full"></div>
+    <div class="pointer-events-none absolute -bottom-40 -right-40 w-96 h-96 bg-indigo-400 opacity-20 blur-3xl rounded-full"></div>
 
-    <!-- Getting started -->
-    <section class="border-t border-indigo-100 dark:border-gray-700 px-10 py-10">
-      <h2 class="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">
-        Getting Started
-      </h2>
-      <ol class="space-y-3 list-decimal list-inside text-gray-700 dark:text-gray-300">
-        <li>Log into <span class="font-medium">Canvas</span> and copy your domain (e.g. <code class="px-1 py-0.5 bg-indigo-100 text-indigo-700 dark:bg-indigo-700/30 dark:text-indigo-200 rounded">https://school.instructure.com</code>).</li>
-        <li>Navigate to <strong>Account → Settings → Approved Integrations</strong>.</li>
-        <li>Create a new <span class="font-medium">Access Token</span> and copy it.</li>
-        <li>Paste the URL &amp; token below, then hit <span class="font-medium">Fetch Assignments</span>.</li>
-      </ol>
-    </section>
+    <!-- content wrapper -->
+    <div class="relative backdrop-blur-3xl bg-white/70 dark:bg-gray-800/70 rounded-3xl shadow-2xl ring-1 ring-indigo-100 dark:ring-gray-700 overflow-hidden">
 
-    <!-- Form -->
-    <section class="border-t border-indigo-100 dark:border-gray-700 px-10 py-10">
-      <h2 class="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">
-        Connect to Canvas
-      </h2>
+      <!-- Hero -->
+      <header class="text-center px-10 py-12">
+        <h1 class="text-5xl font-extrabold tracking-tight text-indigo-600 dark:text-indigo-400 mb-3">
+          Calendai
+        </h1>
+        <p class="text-lg text-gray-600 dark:text-gray-300">
+          Your one‑click Canvas assignment tracker
+        </p>
+      </header>
 
-      <!-- Fetch form -->
-      <form method="post" action="{% url 'fetch_assignments' %}" class="grid sm:grid-cols-2 gap-4 mb-6">
-        {% csrf_token %}
-        <input
-          type="url"
-          name="canvas_url"
-          placeholder="Canvas URL"
-          required
-          class="col-span-2 sm:col-span-1 w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200" />
+      <!-- Getting started -->
+      <section class="border-t border-indigo-100 dark:border-gray-700 px-10 py-10">
+        <h2 class="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">
+          Getting Started
+        </h2>
+        <ol class="space-y-3 list-decimal list-inside text-gray-700 dark:text-gray-300">
+          <li>Log into <span class="font-medium">Canvas</span> and copy your domain (e.g. <code class="px-1 py-0.5 bg-indigo-100 text-indigo-700 dark:bg-indigo-700/30 dark:text-indigo-200 rounded">https://school.instructure.com</code>).</li>
+          <li>Navigate to <strong>Account → Settings → Approved Integrations</strong>.</li>
+          <li>Create a new <span class="font-medium">Access Token</span> and copy it.</li>
+          <li>Paste the URL &amp; token below, then hit <strong>Fetch Assignments</strong>.</li>
+        </ol>
+      </section>
 
-        <input
-          type="text"
-          name="api_token"
-          placeholder="API Token"
-          required
-          class="col-span-2 sm:col-span-1 w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200" />
+      <!-- Form -->
+      <section class="border-t border-indigo-100 dark:border-gray-700 px-10 py-10">
+        <h2 class="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">
+          Connect to Canvas
+        </h2>
 
-        <button
-          type="submit"
-          class="col-span-2 inline-flex items-center justify-center gap-2 px-6 py-3 font-medium rounded-lg bg-indigo-600 text-black hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-indigo-500 dark:text-gray-900">
-          <span class="material-symbols-outlined -ml-1"></span>
-          Fetch Assignments
-        </button>
-      </form>
+        <form method="post" action="{% url 'fetch_assignments' %}" class="grid sm:grid-cols-2 gap-4 mb-6">
+          {% csrf_token %}
+          <input
+            type="url"
+            name="canvas_url"
+            placeholder="Canvas URL"
+            required
+            class="col-span-2 sm:col-span-1 w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200" />
 
-      <!-- Wipe form -->
-      <form method="post" action="{% url 'wipe_saved' %}" onsubmit="return confirm('Are you sure you want to remove all saved data?');">
-        {% csrf_token %}
-        <button
-          type="submit"
-          class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 font-medium rounded-lg bg-red-500 text-black hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-400 dark:bg-red-600 dark:text-gray-100">
-          <span class="material-symbols-outlined -ml-1"></span>
-          Wipe Saved Data
-        </button>
-      </form>
-    </section>
+          <input
+            type="text"
+            name="api_token"
+            placeholder="API Token"
+            required
+            class="col-span-2 sm:col-span-1 w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200" />
 
-    <!-- Footer -->
-    <footer class="border-t border-indigo-100 dark:border-gray-700 text-center text-sm text-gray-500 dark:text-gray-400 px-10 py-6">
-      <p class="mb-1">
-        Built by
-        <a href="#" class="text-indigo-600 dark:text-indigo-400 hover:underline">Alejandro Barragan Solis</a>,
-        <a href="#" class="text-indigo-600 dark:text-indigo-400 hover:underline">Carson King</a>,
-        <a href="#" class="text-indigo-600 dark:text-indigo-400 hover:underline">Brian Goins</a>,
-        <a href="#" class="text-indigo-600 dark:text-indigo-400 hover:underline">Aidan Meshberg</a>,
-        <a href="#" class="text-indigo-600 dark:text-indigo-400 hover:underline">Ashlee Paradis</a>
-      </p>
-      <p>Last updated: April 22, 2025</p>
-    </footer>
+          <!-- Fancy animated button (no icons) -->
+          <button
+            type="submit"
+            class="col-span-2 relative overflow-hidden inline-flex items-center justify-center px-6 py-3 font-medium text-black rounded-lg ring-1 ring-indigo-300 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-indigo-500/90 dark:text-gray-900">
+            <span class="relative z-10">Fetch Assignments</span>
+            <span class="absolute inset-0 before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/40 before:to-transparent before:translate-x-[-100%] before:skew-x-[-20deg] before:transition-transform before:duration-700 hover:before:translate-x-[200%]"></span>
+          </button>
+        </form>
+
+        <form method="post" action="{% url 'wipe_saved' %}" onsubmit="return confirm('Are you sure you want to remove all saved data?');">
+          {% csrf_token %}
+          <button
+            type="submit"
+            class="w-full relative overflow-hidden inline-flex items-center justify-center px-6 py-3 font-medium text-black bg-red-500 rounded-lg ring-1 ring-red-300 transition-all duration-300 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-400 dark:bg-red-600 dark:text-gray-100">
+            <span class="relative z-10">Wipe Saved Data</span>
+            <span class="absolute inset-0 before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/40 before:to-transparent before:translate-x-[-100%] before:skew-x-[-20deg] before:transition-transform before:duration-700 hover:before:translate-x-[200%]"></span>
+          </button>
+        </form>
+      </section>
+
+      <!-- Footer -->
+      <footer class="border-t border-indigo-100 dark:border-gray-700 text-center text-sm text-gray-500 dark:text-gray-400 px-10 py-6">
+        <p class="mb-1">
+          Built by
+          <a href="#" class="text-indigo-600 dark:text-indigo-400 hover:underline">Alejandro Barragan Solis</a>,
+          <a href="#" class="text-indigo-600 dark:text-indigo-400 hover:underline">Carson King</a>,
+          <a href="#" class="text-indigo-600 dark:text-indigo-400 hover:underline">Brian Goins</a>,
+          <a href="#" class="text-indigo-600 dark:text-indigo-400 hover:underline">Aidan Meshberg</a>,
+          <a href="#" class="text-indigo-600 dark:text-indigo-400 hover:underline">Ashlee Paradis</a>
+        </p>
+        <p>Last updated: April 22, 2025</p>
+      </footer>
+    </div>
   </main>
 </div>
 {% endblock %}
-
-
