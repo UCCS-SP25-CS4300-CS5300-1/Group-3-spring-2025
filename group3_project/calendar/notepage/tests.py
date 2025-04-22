@@ -133,8 +133,7 @@ class FileImportTestCase(TestCase):
         self.assertTrue(Note.objects.filter(title='binary_file').exists())
         note = Note.objects.get(title='binary_file')
         
-        self.assertIn("This note was created from file", note.content)
-        self.assertIn("could not be displayed as text", note.content)
+        self.assertIn("The file you tried to upload has an unsupported file type", note.content)
 
     def test_import_markdown_file(self):
         content = "# Markdown Test\n\n**Bold text**"
@@ -147,14 +146,6 @@ class FileImportTestCase(TestCase):
         html_content = note.get_html_content()
         self.assertIn("<h1>Markdown Test</h1>", html_content)
         self.assertIn("<strong>Bold text</strong>", html_content)
-
-    def test_import_pdf_file(self):
-        # VERY simple PDF with binary data. Test basically checks if it can upload - nothing with formatting
-        file = SimpleUploadedFile("test.pdf", b"%PDF-1.0 test data")
-        
-        response = self.client.post(reverse('import_file'), {'file': file})
-        
-        self.assertTrue(Note.objects.filter(title='test').exists())
 
 class AISummarizationTestCase(TestCase):
     def setUp(self):
