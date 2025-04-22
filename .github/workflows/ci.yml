@@ -68,13 +68,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'  # or your desired version
+          python-version: '3.12.3'
 
       - name: Install dependencies
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
-          # Make sure coverage is in your requirements.txt or install explicitly:
 
       - name: Set up Django env
         run: |
@@ -85,3 +84,68 @@ jobs:
           cd group3_project/calendar
           coverage run manage.py test
           coverage report -m
+
+  ################################################################
+  # 3. Linting with Flake8
+  ################################################################
+  lint:
+    name: Lint Code with Flake8
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12.3'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Flake8 run
+        run: |
+          flake8 group3_project/calendar --count --select=E9,F7 --show-source --statistics
+          flake8 group3_project/calendar --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+  # NOTE: 1st command is strict rules wise, will fail the job if real issues are there
+  # What the commands are doing, --count: Prints the total number of issues found at the end of the run
+  # --statistics: Shows a summary of the number of times each error or warning appears
+  # --select=E9,F7: E9, all E9xx codes, runtime errors
+  # F7, all F7xx codes: Checks problems with control flow statements and catches some syntax errors
+  # --show-source:  Shows the line of code where an issue was found.
+  # --exit-zero: Always returns a success code
+  # --max-complexity=10: Flags functions that are "too complex", where complexity is cyclomatic complexity > 10
+  # --max-line-length=127: Flags lines longer than 127 characters. 2^7. We're doing web stuff, some lines are long, but there should be a limit.
+
+  #Here is a link for all of the 'E' codes: https://pycodestyle.pycqa.org/en/latest/intro.html#error-codes
+  #Here is a link for most of the 'F' codes: https://flake8.pycqa.org/en/latest/user/error-codes.html
+
+  ################################################################
+# 4. Dependency Vulnerability Scan
+################################################################
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12.3'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Safety Scan
+        uses: pyupio/safety-action@v1
+        with:
+          api-key: ${{ secrets.SAFETY_API_KEY }}
+          requirements: group3_project/calendar/requirements.txt

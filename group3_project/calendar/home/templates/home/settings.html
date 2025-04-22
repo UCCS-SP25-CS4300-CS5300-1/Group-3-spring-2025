@@ -1,0 +1,13 @@
+{% extends 'home/base.html' %}
+{% block title %}Settings - Calendai{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>User Settings</h2>
+    <p>{{ message }}</p>
+    <!-- Section for changing password -->
+    <h3>Change Password</h3>
+    <p><a href="{% url 'password_change' %}" class="btn btn-warning">Change Password</a></p>
+
+</div>
+{% endblock %}
