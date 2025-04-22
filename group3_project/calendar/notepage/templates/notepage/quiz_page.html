@@ -2,6 +2,8 @@
 {% block title %}AI Quiz Generator{% endblock %}
 
 {% block content %}
+<h2 class="mb-3">Select Notes To Be Quizzed On</h2>
+
 <form id="quiz-form" class="mb-4">
   {% for note in notes %}
     <div class="form-check">
@@ -41,7 +43,7 @@
     document.getElementById("quiz-results").innerHTML = "";
     document.getElementById("submit-quiz").style.display = "none";
 
-    // This will store all of the selected answers.
+    // This will store the selected notes you want to be quizzed on.
     const selectedIds = [];
     document.querySelectorAll("input[type='checkbox']:checked").forEach(cb => {
       selectedIds.push(cb.value);
@@ -54,7 +56,8 @@
       return;
     }
 
-    // THis will fetch the view to send the contents of the note and make the quiz.
+    // This will fetch the view to send the contents of the note and make the quiz. It will parse the views call and send the correct answers to the correctAnswer array. The
+    // rest of the answers and question will be in their own variable.
     fetch("{% url 'generate_multi_note_quiz' %}", {
       method: "POST",
       headers: {
@@ -98,13 +101,14 @@
     });
   }
 
-  // This is for the submit button once the user has submitted the answers.
+  // This is for the submit button once the user has submitted the answers and will display the results.
   document.getElementById("submit-quiz").addEventListener("click", () => {
     const resultBox = document.getElementById("quiz-results");
     let score = 0;
     resultBox.innerHTML = "<h4>Results</h4><ul>";
 
-  // After the answer is submitted, it will then go through each question and show the user the correct and incorrect scores along with a score out of however many questions were answered correctly.
+  // After the answers are submitted, it will then go through each question and compare the user's answers to the correct ones along with a score 
+  // out of however many questions the user answered correctly.
   correctAnswers.forEach((correct, i) => {
       const selected = document.querySelector(`input[name="q${i}"]:checked`);
       const answer = selected ? selected.value : "No answer";
