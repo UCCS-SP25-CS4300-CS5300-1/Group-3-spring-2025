@@ -18,6 +18,12 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
+from .forms import EventForm
+from django.utils import timezone
+from datetime import datetime
+from django.conf import settings
+import pytz
+
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +44,7 @@ def fetch_json(url, headers):
 @csrf_exempt
 def clear_calendar(request):
     if request.method == "POST":
-        Event.objects.all().delete()
+        Event.objects.filter(user=request.user).delete()
         messages.success(request, "All events have been cleared.")
     else:
         messages.error(request, "Invalid request.")
@@ -50,10 +56,9 @@ def index(request):
     return render(request, 'home/index.html')
     
 #Calendar view
-@csrf_exempt
 @login_required
 def calendar_view(request):
-    events = list(Event.objects.filter(user=request.user).values("course_name", "title", "event_type", "due_date"))
+    events = list(Event.objects.filter(user=request.user).values("course_name", "title", "event_type", "due_date", "custom"))
     events_json = json.dumps(events, cls=DjangoJSONEncoder)
     return render(request, "home/calendar.html", {"events_json": events_json})
 
@@ -74,7 +79,10 @@ def parse_date(date_str):
 def get_active_courses(canvas_url, api_token):
     url     = f"{canvas_url}/api/v1/courses?enrollment_state=active&per_page=100"
     headers = {"Authorization": f"Bearer {api_token}"}
-    return fetch_json(url, headers)
+    try:
+        return fetch_json(url, headers)
+    except Exception as e:
+        raise Exception(f"Error fetching courses: {e}")
 
 #Fetches all assignments and modules
 @csrf_exempt
@@ -148,7 +156,8 @@ def fetch_assignments(request):
             cname = c.get("name", "Unknown Course")
 
             for a in assignments_by_course.get(cid, []):
-                due = parse_date(a.get("due_at") or "")
+                due = parse_date(a.get("due_at") or "") 
+
                 if due and due.year == current_year:
                     event_objs.append(Event(
                         user=request.user,
@@ -164,7 +173,8 @@ def fetch_assignments(request):
                 module_objs.append(Module(
                     title=mod_title,
                     course_name=cname,
-                    description=m.get("description") or ""
+                    user=request.user,
+                    description=m.get("description") or "",
                 ))
                 module_jobs.append((cid, cname, m["id"], mod_title))
 
@@ -229,14 +239,14 @@ def fetch_assignments(request):
 #Course list view
 @csrf_exempt
 def courses_list(request):
-    courses = Module.objects.values_list('course_name', flat=True).distinct()
+    courses = Module.objects.filter(user=request.user).values_list('course_name', flat=True).distinct()
     return render(request, "home/courses_list.html", {"courses": courses})
 
 #Course details view
 @csrf_exempt
 def course_detail(request, course_name):
-    assignments = Event.objects.filter(course_name=course_name, event_type="assignment").order_by('due_date')
-    modules = Module.objects.filter(course_name=course_name)
+    assignments = Event.objects.filter(course_name=course_name, event_type="assignment", user=request.user).order_by('due_date')
+    modules = Module.objects.filter(course_name=course_name, user=request.user)
     return render(request, "home/course_detail.html", {
         "course_name": course_name,
         "assignments": assignments,
@@ -255,11 +265,11 @@ def assignment_detail(request, assignment_id):
 def wipe_saved(request):
     if request.method == "POST":
         #Clears all Calendar events
-        Event.objects.all().delete()
+        Event.objects.filter(user=request.user).delete()
         #Clears all modules
-        Module.objects.all().delete()
+        Module.objects.filter(user=request.user).delete()
         #Clears module items
-        ModuleItem.objects.all().delete()
+        ModuleItem.objects.filter(module__user=request.user).delete()
         messages.success(request, "All saved events and modules have been wiped.")
     else:
         messages.error(request, "Invalid request.")
@@ -281,3 +291,22 @@ def register(request):
 @login_required
 def index(request):
     return render(request, 'home/index.html')
+
+@login_required
+def add_event(request):
+    if request.method == 'POST':
+        form = EventForm(request.POST)
+        if form.is_valid():
+            
+            event = form.save(commit=False)
+            event.user = request.user  
+            event.custom = True
+            event.save()
+        
+        return redirect('calendar_view')   
+    else:
+        form = EventForm()
+    return render(request, 'home/add_event.html', {'form': form})
+
+def user_settings(request):
+    return render(request, "home/settings.html")

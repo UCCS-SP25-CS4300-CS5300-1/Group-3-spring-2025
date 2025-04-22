@@ -1,11 +1,19 @@
+import json
+import requests
 from django.test import TestCase, Client
 from django.urls import reverse
 from datetime import datetime, timedelta
+from home.models import Event, Module, ModuleItem
 from unittest.mock import patch
 import requests
 from home.models import Event, Module, ModuleItem
 from home.views import get_active_courses, parse_date 
 from django.contrib.auth.models import User
+from unittest.mock import patch
+from django.utils import timezone
+from home.views import parse_date, get_active_courses, fetch_assignments  # etc.
+
+
 
 # Test for properly displaying academic work on calendar
 class CalendarViewTests(TestCase):
@@ -16,6 +24,7 @@ class CalendarViewTests(TestCase):
 
         # Log in the user before testing
         self.client.login(username=self.username, password=self.password)
+        self.other = User.objects.create_user(username='other', password='otherpass')
 
     def test_calendar_view(self):
         # Create test events
@@ -43,33 +52,63 @@ class CalendarViewTests(TestCase):
 
 #Test to check clear calendar GET
     def test_clear_calendar_get_request(self):
-        #Create a test event
-        event = Event.objects.create(
-            title = "Test Event",
-            description ="Test event description.",
-            due_date = datetime(2025, 3, 20),
-            event_type ="assignment"
+        Event.objects.create(
+            user=self.user,
+            title="Alice's Event",
+            description="Should be deleted",
+            due_date=datetime(2025,3,20),
+            event_type="assignment",
         )
-        #Perform a GET request to the clear_calendar view
-        response = self.client.get(reverse('clear_calendar'))
-        #Expecting a redirect 
-        self.assertEqual(response.status_code, 302)
-        #Ensure the event is still in the database
-        self.assertEqual(Event.objects.count(), 1)
+        Event.objects.create(
+            user=self.other,
+            title="Bob's Event",
+            description="Should survive",
+            due_date=datetime(2025,3,21),
+            event_type="test",
+        )
+
+        response = self.client.post(reverse('clear_calendar'))
+        self.assertRedirects(response, reverse('calendar_view'))
+
+        # alice’s events are gone
+        self.assertFalse(Event.objects.filter(user=self.user).exists())
+        # bob’s are still there
+        self.assertTrue(Event.objects.filter(user=self.other).exists())
 
 #Test to check clear calendar POST
     def test_clear_calendar_post_request(self):
-        #Create test events
         Event.objects.create(
-            title="Another Assignment",
-            description="Desc",
-            due_date=datetime(2025, 4, 5, 12, 0),
+            user=self.user,
+            title="User's Assignment",
+            description="Belongs to testuser",
+            due_date=datetime(2025, 3, 21),
             event_type="assignment",
-            course_name="Test Course"
+            course_name="TestCourse"
         )
+        Event.objects.create(
+            user=self.other,
+            title="Other's Assignment",
+            description="Belongs to other",
+            due_date=datetime(2025, 3, 22),
+            event_type="assignment",
+            course_name="OtherCourse"
+        )
+
         response = self.client.post(reverse('clear_calendar'))
         self.assertRedirects(response, reverse('calendar_view'))
-        self.assertEqual(Event.objects.count(), 0)
+
+        # only self.user's events should be gone
+        self.assertEqual(
+            Event.objects.filter(user=self.user).count(),
+            0,
+            "All of the logged‑in user’s events should be deleted"
+        )
+        # the other user’s event should still exist
+        self.assertEqual(
+            Event.objects.filter(user=self.other).count(),
+            1,
+            "Events belonging to other users must remain"
+        )
 
 #Test to check if there is anything missing/Invalid
     def test_fetch_assignments_invalid_credentials(self):
@@ -154,8 +193,8 @@ class ViewFunctionTests(TestCase):
         self.client.login(username='viewuser', password='pass')
 
     def test_courses_list(self):
-        Module.objects.create(course_name="CourseX", title="M1", description="D1")
-        Module.objects.create(course_name="CourseY", title="M2", description="D2")
+        Module.objects.create(user=self.user, course_name="CourseX", title="M1", description="D1")
+        Module.objects.create(user=self.user, course_name="CourseY", title="M2", description="D2")
         response = self.client.get(reverse('courses_list'))
         self.assertEqual(response.status_code, 200)
         self.assertIn("CourseX", response.context['courses'])
@@ -163,7 +202,7 @@ class ViewFunctionTests(TestCase):
 
     def test_course_detail(self):
         Event.objects.create(user=self.user, title="A1", description="D1", due_date=datetime(2025,6,1), event_type="assignment", course_name="C1")
-        Module.objects.create(course_name="C1", title="Mod1", description="Desc")
+        Module.objects.create(user = self.user, course_name="C1", title="Mod1", description="Desc")
         response = self.client.get(reverse('course_detail', args=["C1"]))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context['assignments']), 1)
@@ -178,13 +217,17 @@ class ViewFunctionTests(TestCase):
     def test_wipe_saved(self):
         #Creates data to wipe
         Event.objects.create(user=self.user, title="X", description="D", due_date=datetime(2025,8,1), event_type="assignment", course_name="C3")
-        Module.objects.create(course_name="C3", title="Mod3", description="Desc3")
+        Module.objects.create(user=self.user, course_name="C3", title="Mod3", description="Desc3")
         ModuleItem.objects.create(module=Module.objects.first(), title="Item3", item_type="T")
+        response = self.client.post(reverse('clear_calendar'))
         response = self.client.post(reverse('wipe_saved'))
         self.assertRedirects(response, reverse('calendar_view'))
-        self.assertEqual(Event.objects.count(), 0)
-        self.assertEqual(Module.objects.count(), 0)
-        self.assertEqual(ModuleItem.objects.count(), 0)
+        self.assertEqual(Event.objects.filter(user=self.user).count(), 0)
+        self.assertEqual(Module.objects.filter(user=self.user).count(), 0)
+        self.assertEqual(
+             ModuleItem.objects.filter(module__user=self.user).count(),
+             0
+         )
 
 
 #fetch_assignments testing
@@ -215,3 +258,59 @@ class FetchAssignmentsViewTests(TestCase):
         self.assertEqual(Event.objects.count(), 1)
         self.assertEqual(Module.objects.count(), 1)
         self.assertEqual(ModuleItem.objects.count(), 1)
+
+# Test for assignment creation and displaying custom assignments properly in calendar view
+class CustomAssignmentTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="test", password="secret123")
+        Event.objects.create(
+            user=self.user,
+            title="placeholder",
+            description="",
+            due_date=datetime.now() + timedelta(days=2),
+            event_type="assignment",
+            course_name="Test Course"
+        )
+        self.client.login(username="test", password="secret123")
+
+    def test_add_event_sets_custom_flag(self):
+        url = reverse("add_event")
+        due = (timezone.now() + timezone.timedelta(days=1)).strftime("%Y-%m-%dT%H:%M")
+        data = {
+            "title": "My Custom Task",
+            "description": "A special one-off",
+            "due_date": due,
+            "event_type": "assignment",
+            "course_name": "Test Course",
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 302)
+
+        ev = Event.objects.get(user=self.user, title="My Custom Task")
+        self.assertTrue(ev.custom, "custom flag must be set to True for hand‑added events")
+        self.assertEqual(ev.description, "A special one-off")
+
+    def test_calendar_view_includes_custom_flag(self):
+        # Test filtering calender viwed based on Event.custom boolean value
+        now = timezone.now() + timezone.timedelta(days=1)
+        Event.objects.create(
+            user=self.user, title="Canvas Task", description="", 
+            due_date=now, event_type="assignment", course_name="C1", custom=False
+        )
+        Event.objects.create(
+            user=self.user, title="Manual Task", description="foo", 
+            due_date=now, event_type="assignment", course_name="C2", custom=True
+        )
+
+        url = reverse("calendar_view")
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+
+        js = json.loads(resp.context["events_json"])
+
+        # find custom event
+        manual = next(e for e in js if e["title"].endswith("Manual Task"))
+        canvas = next(e for e in js if e["title"].endswith("Canvas Task"))
+
+        self.assertTrue(manual.get("custom", False), "Manual Task must have custom: true")
+        self.assertFalse(canvas.get("custom", True), "Canvas Task must have custom: false")

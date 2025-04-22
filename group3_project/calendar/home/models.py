@@ -16,6 +16,7 @@ class Event(models.Model):
     due_date = models.DateTimeField()
     event_type = models.CharField(max_length=10, choices=EVENT_TYPES)
     course_name = models.CharField(max_length=100, null=True)
+    custom = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.title} ({self.get_event_type_display()})"
@@ -23,6 +24,7 @@ class Event(models.Model):
 
 #Module model to store Canvas module information
 class Module(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null = True)
     course_name = models.CharField(max_length=100)  
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)  
@@ -34,6 +36,7 @@ class Module(models.Model):
 #Stores individual items inside the module
 class ModuleItem(models.Model):
     module = models.ForeignKey(Module, on_delete=models.CASCADE, related_name='items')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null = True)
     title = models.CharField(max_length=255)
     item_type = models.CharField(max_length=50, blank=True)  #e.g., "Page", "File", etc.
     file_url = models.URLField(blank=True, null=True)  #URL to a file hosted externally (Canvas)
