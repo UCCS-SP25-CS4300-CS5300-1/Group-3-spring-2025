@@ -13,8 +13,7 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.uploadedfile import UploadedFile
 from django.contrib.auth.decorators import login_required
-
-import os
+import docx
 
 @csrf_exempt
 @login_required
@@ -136,13 +135,27 @@ def import_file(request):
             
             filename = os.path.basename(uploaded_file.name)
             title = os.path.splitext(filename)[0]
+            ext = os.path.splitext(filename)[1].lower()
             
             content = ""
-            if isinstance(uploaded_file, UploadedFile):
-                try:                            # Parseable text file
+            if ext == '.txt':
+                try:
                     content = uploaded_file.read().decode('utf-8')
-                except UnicodeDecodeError:      # Unparseable file
-                    content = f"This note was created from file: {filename}\nThe file content could not be displayed as text."
+                except UnicodeDecodeError:
+                    content = f"This note was created from file: {filename}\n\nThe file content could not be displayed as text."
+            elif ext == '.md':
+                try:
+                    content = uploaded_file.read().decode('utf-8')
+                except UnicodeDecodeError:
+                    content = f"This note was created from file: {filename}\n\nThe file content could not be displayed as text."
+            elif ext == '.docx':
+                try:
+                    doc = docx.Document(uploaded_file)
+                    content = '\n\n'.join([paragraph.text for paragraph in doc.paragraphs])
+                except Exception as e:
+                    content = f"This note was created from file: {filename}\n\nError reading the document: {str(e)}"
+            else:
+                content = f"The file you tried to upload has an unsupported file type ({ext}). Please delete this note and upload a file with a support file type."
             
             note = Note(title=title, content=content, user = request.user)
             note.save()
