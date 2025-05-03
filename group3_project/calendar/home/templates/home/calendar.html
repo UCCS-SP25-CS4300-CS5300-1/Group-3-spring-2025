@@ -90,7 +90,7 @@
   </div>
 
   <!-- Embed the JSON data -->
-  <script id="events-json" type="application/json">
+  <script id="events-json" type="application/json" >
     {{ events_json|safe }}
   </script>
   <script>
@@ -124,7 +124,8 @@
                 description: event.description,
                 courseName: event.course_name,
                 dueDate: event.due_date,
-                eventName: event.title
+                eventName: event.title,
+                eventCustom: event.custom
               }
             };
           }
@@ -139,7 +140,8 @@
                     description: event.description,
                     courseName: event.course_name,
                     dueDate: event.due_date,
-                    eventName: event.title
+                    eventName: event.title,
+                    eventCustom: event.custom
                   }
             };
           }
@@ -161,15 +163,24 @@
         eventClick: function(info) {
           info.jsEvent.preventDefault();
           var eventObj = info.event;
-          var dueDate =  moment(eventObj.extendedProps.dueDate).format('MMMM Do YYYY, h:mma');
+          var isCustom = eventObj.extendedProps.eventCustom === true;
+          var dueDate = isCustom
+            ? moment(eventObj.extendedProps.dueDate).utc().format('MMMM Do YYYY, h:mma')
+            : moment(eventObj.extendedProps.dueDate).format('MMMM Do YYYY, h:mma');
+
           var description = eventObj.extendedProps.description || "No description available.";
           var courseName = eventObj.extendedProps.courseName || "No class specified.";
           var eventName = eventObj.extendedProps.eventName || "No title available";
 
           document.getElementById('eventModalLabel').innerText = eventName;
-          document.getElementById('eventDueDate').innerText = "Due Date: " + dueDate;
-          document.getElementById('eventDescription').innerText = "Description: " + description;
-          document.getElementById('eventCourse').innerText = "Class: " + courseName;
+          document.getElementById('eventDueDate').innerHTML =
+            `<strong>Due Date:</strong><br>${dueDate}`;
+
+          document.getElementById('eventDescription').innerHTML =
+            `<strong>Description:</strong><br>${description}`;
+
+          document.getElementById('eventCourse').innerHTML =
+            `<strong>Class:</strong><br>${courseName}`;
 
           var modalEl = document.getElementById('eventModal');
           var modal = new bootstrap.Modal(modalEl);

@@ -12,7 +12,7 @@ class Event(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, null = True)
     title = models.CharField(max_length=255) #Name for assignment, quiz, or test
-    description = models.TextField()
+    description = models.TextField(blank=True, null=True)
     due_date = models.DateTimeField()
     event_type = models.CharField(max_length=10, choices=EVENT_TYPES)
     course_name = models.CharField(max_length=100, null=True)
