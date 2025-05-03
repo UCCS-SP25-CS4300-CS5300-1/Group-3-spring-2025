@@ -202,7 +202,7 @@ def summarize_note(request):
 
 @csrf_exempt
 def multi_note_quiz_page(request):
-    notes = Note.objects.all()
+    notes = Note.objects.filter(user=request.user)
     return render(request, 'notepage/quiz_page.html', {'notes': notes})
 
 @csrf_exempt
@@ -212,7 +212,7 @@ def generate_multi_note_quiz(request):
             client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
             data = json.loads(request.body)
             note_ids = data.get('note_ids', [])
-            selected_notes = Note.objects.filter(pk__in=note_ids)
+            selected_notes = Note.objects.filter(pk__in=note_ids, user=request.user)
 
             combined_content = "\n\n".join(note.content for note in selected_notes)
 

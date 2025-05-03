@@ -58,7 +58,10 @@ def index(request):
 #Calendar view
 @login_required
 def calendar_view(request):
-    events = list(Event.objects.filter(user=request.user).values("course_name", "title", "event_type", "due_date", "custom"))
+    events = list(Event.objects.filter(user=request.user).values("course_name", "title", "description", "event_type", "due_date", "custom"))
+    from django.utils.html import strip_tags
+    for ev in events:
+        ev["description"] = strip_tags(ev["description"] or "")
     events_json = json.dumps(events, cls=DjangoJSONEncoder)
     return render(request, "home/calendar.html", {"events_json": events_json})
 
@@ -309,4 +312,24 @@ def add_event(request):
     return render(request, 'home/add_event.html', {'form': form})
 
 def user_settings(request):
-    return render(request, "home/settings.html")
+    # handle deletion
+    custom_events = Event.objects.filter(user=request.user, custom=True).order_by('due_date')
+
+    # if they POSTed a delete_event, handle that first:
+    if request.method == "POST" and request.POST.get("delete_event"):
+        ev_id = request.POST["delete_event"]
+        deleted, _ = Event.objects.filter(
+            user=request.user,
+            pk=ev_id,
+            custom=True
+        ).delete()
+        if deleted:
+            messages.success(request, "Assignment deleted.")
+        else:
+            messages.error(request, "Couldn’t find that assignment.")
+        return redirect("user_settings")
+
+    # otherwise just show the page
+    return render(request, "home/settings.html", {
+        "custom_events": custom_events
+    })

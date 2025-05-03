@@ -27,6 +27,11 @@ class EventForm(forms.ModelForm):
 
             choices = [(course, course) for course in courses]
 
+            choices.insert(0, ('Personal', 'Personal'))
+
             choices.insert(0, ("", "--- Select a course ---"))
 
             self.fields['course_name'].choices = choices
+
+        for fld in self.fields.values():
+            fld.widget.attrs.update({'class': 'form-control'})
