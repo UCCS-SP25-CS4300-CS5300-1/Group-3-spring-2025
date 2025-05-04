@@ -190,7 +190,6 @@ class AISummarizationTestCase(TestCase):
         self.assertIn('summary', response.json())
         self.assertEqual(response.json()['summary'], 'This is a test summary.')
 
-
     @patch('notepage.views.OpenAI')
     def test_summarize_note_missing_content(self, mock_openai):
         mock_openai.return_value.chat.completions.create.return_value = type('obj', (object,), {
