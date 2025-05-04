@@ -105,7 +105,6 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
-          pip install flake8-coverage
 
       - name: Flake8 run
         run: |
