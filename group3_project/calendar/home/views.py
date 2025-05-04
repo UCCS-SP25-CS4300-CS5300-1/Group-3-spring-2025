@@ -2,19 +2,14 @@ import logging
 import json
 import traceback
 from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
-import pytz
 import requests
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import transaction
-from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils import timezone
 from django.utils.html import strip_tags
 from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
@@ -47,11 +42,6 @@ def clear_calendar(request):
     else:
         messages.error(request, "Invalid request.")
     return redirect('calendar_view')
-
-
-@csrf_exempt
-def index(request):
-    return render(request, 'home/index.html')
 
 
 @login_required

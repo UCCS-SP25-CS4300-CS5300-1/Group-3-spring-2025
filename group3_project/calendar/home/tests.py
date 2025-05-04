@@ -23,7 +23,6 @@ class CalendarViewTests(TestCase):
         self.client.login(username=self.username, password=self.password)
         self.other = User.objects.create_user(username='other', password='otherpass')
 
-
     def test_calendar_view(self):
         # Create test events
         event_1 = Event.objects.create(
@@ -177,9 +176,9 @@ class UtilsTests(TestCase):
 
     @patch('home.views.fetch_json')
     def test_get_active_courses_success(self, mock_fetch):
-        mock_fetch.return_value = [{'id':99}]
+        mock_fetch.return_value = [{'id': 99}]
         result = get_active_courses("https://canvas.test", "tok")
-        self.assertEqual(result, [{'id':99}])
+        self.assertEqual(result, [{'id': 99}])
         mock_fetch.assert_called_once()
 
     @patch('home.views.fetch_json')
@@ -198,25 +197,28 @@ class ViewFunctionTests(TestCase):
         self.client.login(username='viewuser', password='pass')
 
     def test_courses_list(self):
-        Module.objects.create(user=self.user, 
-                                course_name="CourseX",
-                                title="M1",
-                                description="D1")
-        Module.objects.create(user=self.user,
-                                course_name="CourseY",
-                                title="M2",
-                                description="D2")
+        Module.objects.create(
+            user=self.user,
+            course_name="CourseX",
+            title="M1",
+            description="D1")
+        Module.objects.create(
+            user=self.user,
+            course_name="CourseY",
+            title="M2",
+            description="D2")
         response = self.client.get(reverse('courses_list'))
         self.assertEqual(response.status_code, 200)
         self.assertIn("CourseX", response.context['courses'])
         self.assertIn("CourseY", response.context['courses'])
 
     def test_course_detail(self):
-        Event.objects.create(user=self.user, 
-                                title="A1", description="D1", 
-                                due_date=datetime(2025,6,1), 
-                                event_type="assignment", 
-                                course_name="C1")
+        Event.objects.create(
+            user=self.user,
+            title="A1", description="D1", 
+            due_date=datetime(2025,6,1), 
+            event_type="assignment", 
+            course_name="C1")
         Module.objects.create(user=self.user, course_name="C1", title="Mod1", description="Desc")
         response = self.client.get(reverse('course_detail', args=["C1"]))
         self.assertEqual(response.status_code, 200)
@@ -224,24 +226,26 @@ class ViewFunctionTests(TestCase):
         self.assertEqual(len(response.context['modules']), 1)
 
     def test_assignment_detail(self):
-        ev = Event.objects.create(user=self.user, 
-                                    title="A2", 
-                                    description="Desc2", 
-                                    due_date=datetime(2025,7,1), 
-                                    event_type="test", 
-                                    course_name="C2")
+        ev = Event.objects.create(
+            user=self.user, 
+            title="A2", 
+            description="Desc2", 
+            due_date=datetime(2025,7,1), 
+            event_type="test", 
+            course_name="C2")
         response = self.client.get(reverse('assignment_detail', args=[ev.id]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "A2")
 
     def test_wipe_saved(self):
-        #Creates data to wipe
-        Event.objects.create(user=self.user, 
-                                title="X", 
-                                description="D", 
-                                due_date=datetime(2025,8,1), 
-                                event_type="assignment", 
-                                course_name="C3")
+        # Creates data to wipe
+        Event.objects.create(
+            user=self.user, 
+            title="X", 
+            description="D", 
+            due_date=datetime(2025,8,1), 
+            event_type="assignment", 
+            course_name="C3")
         Module.objects.create(user=self.user, course_name="C3", title="Mod3", description="Desc3")
         ModuleItem.objects.create(module=Module.objects.first(), title="Item3", item_type="T")
         response = self.client.post(reverse('clear_calendar'))
@@ -266,7 +270,7 @@ class FetchAssignmentsViewTests(TestCase):
         u.userprofile  # assume signal or auto-creation
         self.client.login(username='user', password='pass')
         self.canvas_url = 'https://canvas.example.com'
-        self.api_token  = 'token123'
+        self.api_token = 'token123'
 
     def test_non_post_redirects(self):
         response = self.client.get(reverse('fetch_assignments'))
