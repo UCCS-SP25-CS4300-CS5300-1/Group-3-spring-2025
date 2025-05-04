@@ -123,7 +123,7 @@ jobs:
   #Here is a link for all of the 'E' codes: https://pycodestyle.pycqa.org/en/latest/intro.html#error-codes
   #Here is a link for most of the 'F' codes: https://flake8.pycqa.org/en/latest/user/error-codes.html
 
-  ################################################################
+################################################################
 # 4. Dependency Vulnerability Scan
 ################################################################
   dependency-scan:
@@ -149,3 +149,26 @@ jobs:
         with:
           api-key: ${{ secrets.SAFETY_API_KEY }}
           requirements: group3_project/calendar/requirements.txt
+
+################################################################
+# 5. seeing what openai version can be used
+################################################################
+  check-models:
+    name: Check Usable OpenAI Models
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+
+      - name: Install dependencies
+        run: pip install openai
+
+      - name: Run model listing script
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python group3_project/calendar/scripts/list_models.py
