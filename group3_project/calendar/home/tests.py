@@ -1,19 +1,15 @@
+# tests.py
 import json
 import requests
 from django.test import TestCase, Client
 from django.urls import reverse
 from datetime import datetime, timedelta
 from django.utils.timezone import now
-from home.models import Event, Module, ModuleItem
-from unittest.mock import patch
-import requests
 from home.models import Event, Module, ModuleItem, UserProfile
-from home.views import get_active_courses, parse_date 
+from home.views import get_active_courses, parse_date, fetch_assignments
 from django.contrib.auth.models import User
-from unittest.mock import patch
 from django.utils import timezone
-from home.views import parse_date, get_active_courses, fetch_assignments  # etc.
-
+from unittest.mock import patch
 
 
 # Test for properly displaying academic work on calendar
@@ -27,21 +23,22 @@ class CalendarViewTests(TestCase):
         self.client.login(username=self.username, password=self.password)
         self.other = User.objects.create_user(username='other', password='otherpass')
 
+
     def test_calendar_view(self):
         # Create test events
         event_1 = Event.objects.create(
-            user = self.user,
-            title = "Math Homework 1",
-            description ="Complete problems 1, 2, and 3.",
-            due_date = datetime(2025, 3, 15),
-            event_type ="assignment"
+            user=self.user,
+            title="Math Homework 1",
+            description="Complete problems 1, 2, and 3.",
+            due_date=datetime(2025, 3, 15),
+            event_type="assignment"
         )
         event_2 = Event.objects.create(
-            user = self.user,
-            title = "SE Test",
-            description = "Use the study guide given in class to prepare for test.",
-            due_date = datetime(2025, 3, 16),
-            event_type = "test"
+            user=self.user,
+            title="SE Test",
+            description="Use the study guide given in class to prepare for test.",
+            due_date=datetime(2025, 3, 16),
+            event_type="test"
         )
 
         response = self.client.get(reverse('calendar_view')) 
@@ -51,7 +48,8 @@ class CalendarViewTests(TestCase):
         self.assertContains(response, "2025-03-15")  
         self.assertContains(response, "2025-03-16")
 
-#Test to check clear calendar GET
+
+# Test to check clear calendar GET
     def test_clear_calendar_get_request(self):
         Event.objects.create(
             user=self.user,
@@ -68,7 +66,7 @@ class CalendarViewTests(TestCase):
             event_type="test",
         )
 
-        response = self.client.post(reverse('clear_calendar'))
+        response=self.client.post(reverse('clear_calendar'))
         self.assertRedirects(response, reverse('calendar_view'))
 
         # alice’s events are gone
@@ -76,7 +74,8 @@ class CalendarViewTests(TestCase):
         # bob’s are still there
         self.assertTrue(Event.objects.filter(user=self.other).exists())
 
-#Test to check clear calendar POST
+
+# Test to check clear calendar POST
     def test_clear_calendar_post_request(self):
         Event.objects.create(
             user=self.user,
@@ -111,7 +110,8 @@ class CalendarViewTests(TestCase):
             "Events belonging to other users must remain"
         )
 
-#Test to check if there is anything missing/Invalid
+
+# Test to check if there is anything missing/Invalid
     def test_fetch_assignments_invalid_credentials(self):
         response = self.client.post(reverse('fetch_assignments'), {
             'canvas_url': 'https://invalid-canvas.example.com',
@@ -119,12 +119,14 @@ class CalendarViewTests(TestCase):
         })
         self.assertEqual(response.status_code, 302)
 
+
 # Test for user profiles and loggin in
 class LoginTest(TestCase):
     def setUp(self):
         self.username = "usertest"
         self.password = "1234testing"
-        self.user = User.objects.create_user(username=self.username, password=self.password)
+        self.user=User.objects.create_user(username=self.username,
+                                            password=self.password)
 
     def test_login_get(self):
         response = self.client.get(reverse('login'))
@@ -153,10 +155,11 @@ class LoginTest(TestCase):
     def test_user_profile_exists_after_login(self):
         # Log in the user and verify that a userprofile exists.
         self.client.login(username=self.username, password=self.password)
-        user = User.objects.get(username=self.username)
-        # This test assumes you have signals set up to automatically create a UserProfile.
+        user=User.objects.get(username=self.username)
         self.assertTrue(hasattr(user, 'userprofile'))
-#Utility functions tests
+
+
+# Utility functions tests
 class UtilsTests(TestCase):
     def test_parse_date_none_and_empty(self):
         self.assertIsNone(parse_date(None))
@@ -165,7 +168,7 @@ class UtilsTests(TestCase):
     def test_parse_date_with_Z_and_without(self):
         dt1 = parse_date("2025-05-01T12:00:00Z")
         dt2 = parse_date("2025-05-01T12:00:00")
-        expected = datetime(2025,5,1,12,0)
+        expected = datetime(2025, 5, 1, 12, 0)
         self.assertEqual(dt1, expected)
         self.assertEqual(dt2, expected)
 
@@ -186,7 +189,8 @@ class UtilsTests(TestCase):
             get_active_courses("https://canvas.test", "tok")
         self.assertIn("fail", str(cm.exception))
 
-#Carson's View functions tests
+
+# Carson's View functions tests
 class ViewFunctionTests(TestCase):
     def setUp(self):
         self.client = Client()
@@ -194,30 +198,50 @@ class ViewFunctionTests(TestCase):
         self.client.login(username='viewuser', password='pass')
 
     def test_courses_list(self):
-        Module.objects.create(user=self.user, course_name="CourseX", title="M1", description="D1")
-        Module.objects.create(user=self.user, course_name="CourseY", title="M2", description="D2")
+        Module.objects.create(user=self.user, 
+                                course_name="CourseX",
+                                title="M1",
+                                description="D1")
+        Module.objects.create(user=self.user,
+                                course_name="CourseY",
+                                title="M2",
+                                description="D2")
         response = self.client.get(reverse('courses_list'))
         self.assertEqual(response.status_code, 200)
         self.assertIn("CourseX", response.context['courses'])
         self.assertIn("CourseY", response.context['courses'])
 
     def test_course_detail(self):
-        Event.objects.create(user=self.user, title="A1", description="D1", due_date=datetime(2025,6,1), event_type="assignment", course_name="C1")
-        Module.objects.create(user = self.user, course_name="C1", title="Mod1", description="Desc")
+        Event.objects.create(user=self.user, 
+                                title="A1", description="D1", 
+                                due_date=datetime(2025,6,1), 
+                                event_type="assignment", 
+                                course_name="C1")
+        Module.objects.create(user=self.user, course_name="C1", title="Mod1", description="Desc")
         response = self.client.get(reverse('course_detail', args=["C1"]))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context['assignments']), 1)
         self.assertEqual(len(response.context['modules']), 1)
 
     def test_assignment_detail(self):
-        ev = Event.objects.create(user=self.user, title="A2", description="Desc2", due_date=datetime(2025,7,1), event_type="test", course_name="C2")
+        ev = Event.objects.create(user=self.user, 
+                                    title="A2", 
+                                    description="Desc2", 
+                                    due_date=datetime(2025,7,1), 
+                                    event_type="test", 
+                                    course_name="C2")
         response = self.client.get(reverse('assignment_detail', args=[ev.id]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "A2")
 
     def test_wipe_saved(self):
         #Creates data to wipe
-        Event.objects.create(user=self.user, title="X", description="D", due_date=datetime(2025,8,1), event_type="assignment", course_name="C3")
+        Event.objects.create(user=self.user, 
+                                title="X", 
+                                description="D", 
+                                due_date=datetime(2025,8,1), 
+                                event_type="assignment", 
+                                course_name="C3")
         Module.objects.create(user=self.user, course_name="C3", title="Mod3", description="Desc3")
         ModuleItem.objects.create(module=Module.objects.first(), title="Item3", item_type="T")
         response = self.client.post(reverse('clear_calendar'))
@@ -231,7 +255,7 @@ class ViewFunctionTests(TestCase):
          )
 
 
-#fetch_assignments testing
+# fetch_assignments testing
 class FetchAssignmentsViewTests(TestCase):
     def setUp(self):
         self.client = Client()
@@ -345,6 +369,7 @@ class FetchAssignmentsViewTests(TestCase):
         self.assertEqual(Module.objects.count(), 0)
         self.assertEqual(ModuleItem.objects.count(), 0)
 
+
 # Test for assignment creation and displaying custom assignments properly in calendar view
 class CustomAssignmentTests(TestCase):
     def setUp(self):
@@ -400,6 +425,7 @@ class CustomAssignmentTests(TestCase):
 
         self.assertTrue(manual.get("custom", False), "Manual Task must have custom: true")
         self.assertFalse(canvas.get("custom", True), "Canvas Task must have custom: false")
+
 
 # Basic tests for main page
 class IndexViewTests(TestCase):
