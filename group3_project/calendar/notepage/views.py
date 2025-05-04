@@ -8,21 +8,20 @@ from taggit.models import Tag
 import json
 from openai import OpenAI
 import os
-from dotenv import load_dotenv
-from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.core.files.uploadedfile import UploadedFile
 from django.contrib.auth.decorators import login_required
 import docx
+
 
 @csrf_exempt
 @login_required
 def note_list(request):
+
     user_notes = Note.objects.filter(user=request.user)
     tags = Tag.objects.filter(note__in=user_notes).distinct()
     search_query = request.GET.get('search', '')
     tag_query = request.GET.get('tag', '')
-    
+
     if search_query:
         notes = Note.objects.filter(user=request.user).filter(
             Q(title__icontains=search_query) | Q(content__icontains=search_query)
@@ -31,12 +30,14 @@ def note_list(request):
         notes = Note.objects.filter(user=request.user).filter(tags__name__in=[tag_query]).order_by('-updated_at')
     else:
         notes = Note.objects.filter(user=request.user).order_by('-updated_at')
-    
+
     return render(request, 'notepage/note_list.html', {'notes': notes, 'tags': tags})
+
 
 @csrf_exempt
 @login_required
 def create_note(request):
+
     if request.method == 'POST':
         form = NoteForm(request.POST)
         print("Form submitted!")
@@ -51,18 +52,22 @@ def create_note(request):
             print("Form errors:", form.errors)
     else:
         form = NoteForm()
-    
+
     return render(request, 'notepage/note_form.html', {'form': form, 'action': 'Create'})
+
 
 @csrf_exempt
 @login_required
 def note_detail(request, pk):
+
     note = get_object_or_404(Note, pk=pk, user=request.user)
     return render(request, 'notepage/note_detail.html', {'note': note})
+
 
 @csrf_exempt
 @login_required
 def edit_note(request, pk):
+
     note = get_object_or_404(Note, pk=pk, user=request.user)
 
     if request.method == 'POST':
@@ -79,43 +84,56 @@ def edit_note(request, pk):
 
     return render(request, 'notepage/note_form.html', {'form': form, 'note': note, 'action': 'Edit'})
 
+
 @csrf_exempt
 @login_required
 def delete_note(request, pk):
+
     note = get_object_or_404(Note, pk=pk, user=request.user)
-    
+
     if request.method == 'POST':
         note.delete()
         return redirect('note_list')
-    
+
     return render(request, 'notepage/note_confirm_delete.html', {'note': note})
+
 
 @csrf_exempt
 @login_required
 def autosave_note(request):
+
     if request.method == 'POST':
         data = json.loads(request.body)
         note_id = data.get('note_id')
         title = data.get('title')
         content = data.get('content')
-        
+
         if note_id:
             note = get_object_or_404(Note, pk=note_id)
             note.title = title
             note.content = content
             note.user = request.user
             note.save()
-            return JsonResponse({'success': True, 'saved_at': note.updated_at.strftime("%H:%M:%S")})
+            return JsonResponse({
+                'success': True,
+                'saved_at': note.updated_at.strftime("%H:%M:%S"),
+            })
         else:
             new_note = Note(title=title, content=content, user=request.user)
             new_note.save()
-            return JsonResponse({'success': True, 'note_id': new_note.id, 'saved_at': new_note.updated_at.strftime("%H:%M:%S")})
-    
+            return JsonResponse({
+                'success': True,
+                'note_id': new_note.id,
+                'saved_at': new_note.updated_at.strftime("%H:%M:%S"),
+            })
+
     return JsonResponse({'success': False})
+
 
 @csrf_exempt
 @login_required
 def delete_tags(request):
+
     if request.method == 'POST':
         notes = Note.objects.filter(user=request.user).all()
 
@@ -126,28 +144,36 @@ def delete_tags(request):
 
         return redirect('note_list')
 
+
 @csrf_exempt
 def import_file(request):
+
     if request.method == 'POST':
         form = FileImportForm(request.POST, request.FILES)
         if form.is_valid():
             uploaded_file = request.FILES['file']
-            
+
             filename = os.path.basename(uploaded_file.name)
             title = os.path.splitext(filename)[0]
             ext = os.path.splitext(filename)[1].lower()
-            
+
             content = ""
             if ext == '.txt':
                 try:
                     content = uploaded_file.read().decode('utf-8')
                 except UnicodeDecodeError:
-                    content = f"This note was created from file: {filename}\n\nThe file content could not be displayed as text."
+                    content = (
+                        f"This note was created from file: {filename}\n\n"
+                        "The file content could not be displayed as text."
+                    )
             elif ext == '.md':
                 try:
                     content = uploaded_file.read().decode('utf-8')
                 except UnicodeDecodeError:
-                    content = f"This note was created from file: {filename}\n\nThe file content could not be displayed as text."
+                    content = (
+                        f"This note was created from file: {filename}\n\n"
+                        "The file content could not be displayed as text."
+                    )
             elif ext == '.docx':
                 try:
                     doc = docx.Document(uploaded_file)
@@ -155,34 +181,41 @@ def import_file(request):
                 except Exception as e:
                     content = f"This note was created from file: {filename}\n\nError reading the document: {str(e)}"
             else:
-                content = f"The file you tried to upload has an unsupported file type ({ext}). Please delete this note and upload a file with a support file type."
-            
-            note = Note(title=title, content=content, user = request.user)
+                content = (
+                    f"The file you tried to upload has an unsupported file type ({ext})."
+                    "Please delete this note and upload a file with a support file type."
+                )
+
+            note = Note(title=title, content=content, user=request.user)
             note.save()
-            
+
             tags = form.cleaned_data.get('tags')
             if tags:
                 note.tags.add(*tags.split(','))
-            
+
             return redirect('note_detail', pk=note.pk)
     else:
         form = FileImportForm()
-    
+
     return render(request, 'notepage/import_file.html', {'form': form})
+
 
 @csrf_exempt
 def get_note_content(request, pk):
+
     try:
         note = Note.objects.filter(user=request.user).get(pk=pk)
         return JsonResponse({'content': note.content})
     except Note.DoesNotExist:
         return JsonResponse({'error': 'Note not found'}, status=404)
 
+
 @csrf_exempt
 def summarize_note(request):
+
     if request.method == 'POST':
         try:
-            
+
             data = json.loads(request.body)
             content = data.get('content', '')
             note_id = data.get('note_id', None)
@@ -191,8 +224,8 @@ def summarize_note(request):
 
             if note.summary and note.content == content:
                 return JsonResponse({'summary': note.summary})
-            
-            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))   
+
+            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
             response = client.chat.completions.create(
                 model="gpt-4",
                 messages=[
@@ -204,27 +237,31 @@ def summarize_note(request):
 
             note.summary = summary
             note.save(update_fields=['summary'])
-            
+
             return JsonResponse({'summary': summary})
 
         except Exception as e:
             return JsonResponse({'summary': 'Error: ' + str(e)}, status=500)
 
+
 @csrf_exempt
 def multi_note_quiz_page(request):
+
     notes = Note.objects.filter(user=request.user)
     return render(request, 'notepage/quiz_page.html', {'notes': notes})
 
+
 @csrf_exempt
 def generate_multi_note_quiz(request):
+
     if request.method == 'POST':
         try:
             client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
             data = json.loads(request.body)
-            
+
             if 'note_ids' not in data or not isinstance(data['note_ids'], list):
                 return JsonResponse({'quiz': 'Error: invalid request, note_ids missing or not a list'}, status=500)
-            
+
             note_ids = data.get('note_ids', [])
             selected_notes = Note.objects.filter(pk__in=note_ids, user=request.user)
 

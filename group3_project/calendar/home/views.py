@@ -22,6 +22,7 @@ from .forms import EventForm
 from django.utils import timezone
 from datetime import datetime
 from django.conf import settings
+from django.utils.timezone import now
 import pytz
 
 
@@ -263,10 +264,26 @@ def register(request):
         form = UserCreationForm()
     return render(request, 'home/register.html', {'form': form})
 
+#main page
 @csrf_exempt
 @login_required
 def index(request):
-    return render(request, 'home/index.html')
+    if request.user.is_authenticated:
+        profile = request.user.userprofile
+        token_present = bool(profile.canvas_token)
+
+        if token_present:
+            assignment_list = Event.objects.filter(user=request.user, event_type="assignment", due_date__gte=now()).order_by('due_date')
+        else:
+            assignment_list = None
+    else:
+        token_present = False
+        assignment_list = None
+
+    return render(request, "home/index.html", {
+        "token_present": token_present,
+        "assignment_list": assignment_list
+    })
 
 @login_required
 def add_event(request):
@@ -285,24 +302,35 @@ def add_event(request):
     return render(request, 'home/add_event.html', {'form': form})
 
 def user_settings(request):
+    profile = request.user.userprofile
     # handle deletion
     custom_events = Event.objects.filter(user=request.user, custom=True).order_by('due_date')
 
-    # if they POSTed a delete_event, handle that first:
-    if request.method == "POST" and request.POST.get("delete_event"):
-        ev_id = request.POST["delete_event"]
-        deleted, _ = Event.objects.filter(
-            user=request.user,
-            pk=ev_id,
-            custom=True
-        ).delete()
-        if deleted:
-            messages.success(request, "Assignment deleted.")
-        else:
-            messages.error(request, "Couldn’t find that assignment.")
-        return redirect("user_settings")
+    if request.method == "POST":
+        # if they POSTed a delete_event, handle that first:
+        if request.POST.get("delete_event"):
+            ev_id = request.POST["delete_event"]
+            deleted, _ = Event.objects.filter(
+                user=request.user,
+                pk=ev_id,
+                custom=True
+            ).delete()
+            if deleted:
+                messages.success(request, "Assignment deleted.")
+            else:
+                messages.error(request, "Couldn’t find that assignment.")
+            return redirect("user_settings")
+        # handle API info update
+        canvas_url = request.POST.get("canvas_url")
+        canvas_token = request.POST.get("canvas_token")
+        if canvas_url and canvas_token:
+            profile.canvas_url = canvas_url
+            profile.canvas_token = canvas_token
+            profile.save()
+            messages.success(request, "Canvas API information updated.")
+            return redirect("user_settings")
 
-    # otherwise just show the page
     return render(request, "home/settings.html", {
-        "custom_events": custom_events
+        "custom_events": custom_events,
+        "profile": profile
     })

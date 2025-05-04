@@ -6,10 +6,11 @@ from .models import Note
 from .forms import NoteForm
 from .forms import FileImportForm
 from django.core.files.uploadedfile import SimpleUploadedFile
-from taggit.models import Tag
 from django.contrib.auth.models import User
 
+
 class NoteTestCase(TestCase):
+
     def setUp(self):
         self.client = Client()
         self.user = User.objects.create_user(username='testuser', password='testpass')
@@ -56,7 +57,7 @@ class NoteTestCase(TestCase):
         self.assertEqual(response.url, reverse('note_detail', args=[new_note.pk]))
 
     def test_edit_note(self):
-        response = self.client.post(reverse('edit_note', args=[self.test_note.pk]), {
+        self.client.post(reverse('edit_note', args=[self.test_note.pk]), {
             'title': 'Updated note',
             'content': 'Updated content',
             'tags': 'updated,note'
@@ -91,7 +92,9 @@ class NoteTestCase(TestCase):
         self.assertIn("First note", content)
         self.assertNotIn("Second note", content)
 
+
 class FileImportTestCase(TestCase):
+
     def setUp(self):
         self.client = Client()
         self.user = User.objects.create_user(username='testuser', password='testpass')
@@ -109,24 +112,24 @@ class FileImportTestCase(TestCase):
         self.assertTrue(form.is_valid())
 
     def test_import_form_invalid(self):
-        form = FileImportForm(data={'tags': 'import,test'}) # No file is passed
+        form = FileImportForm(data={'tags': 'import,test'})  # No file is passed
         self.assertFalse(form.is_valid())
 
     def test_import_text_file(self):
         content = "This is test content"
         file = SimpleUploadedFile("test_file.txt", content.encode('utf-8'))
-        
+
         response = self.client.post(reverse('import_file'), {
             'file': file,
             'tags': 'import,test'
         })
-        
+
         self.assertTrue(Note.objects.filter(title='test_file').exists())
         note = Note.objects.get(title='test_file')
-        
+
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('note_detail', args=[note.pk]))
-        
+
         self.assertEqual(note.content, content)
         self.assertEqual(note.tags.count(), 2)
         self.assertIn('import', note.tags.names())
@@ -135,38 +138,40 @@ class FileImportTestCase(TestCase):
     def test_import_binary_file(self):
         binary_data = bytes([0x80, 0x81, 0x82, 0x83])
         file = SimpleUploadedFile("binary_file.bin", binary_data)
-        
-        response = self.client.post(reverse('import_file'), {'file': file})
-        
+
+        self.client.post(reverse('import_file'), {'file': file})
+
         self.assertTrue(Note.objects.filter(title='binary_file').exists())
         note = Note.objects.get(title='binary_file')
-        
+
         self.assertIn("The file you tried to upload has an unsupported file type", note.content)
 
     def test_import_markdown_file(self):
         content = "# Markdown Test\n\n**Bold text**"
         file = SimpleUploadedFile("test.md", content.encode('utf-8'))
-        
+
         self.client.post(reverse('import_file'), {'file': file})
-        
+
         note = Note.objects.get(title='test')
         self.assertEqual(note.content, content)
         html_content = note.get_html_content()
         self.assertIn("<h1>Markdown Test</h1>", html_content)
         self.assertIn("<strong>Bold text</strong>", html_content)
 
+
 class AISummarizationTestCase(TestCase):
+
     def setUp(self):
         self.client = Client()
-        self.url = '/notepage/api/summarize/'  
+        self.url = '/notepage/api/summarize/'
         self.note = Note.objects.create(
             title="TEST",
             content="Caching tests is for the weak."
         )
 
-    @patch('notepage.views.OpenAI') 
+    @patch('notepage.views.OpenAI')
     def test_summarize_note_success(self, mock_openai):
-        
+
         mock_client = mock_openai.return_value
         mock_client.chat.completions.create.return_value = type('obj', (object,), {
             'choices': [type('obj', (object,), {
@@ -185,7 +190,7 @@ class AISummarizationTestCase(TestCase):
         self.assertIn('summary', response.json())
         self.assertEqual(response.json()['summary'], 'This is a test summary.')
 
-    @patch('notepage.views.OpenAI') 
+    @patch('notepage.views.OpenAI')
     def test_summarize_note_missing_content(self, mock_openai):
         mock_openai.return_value.chat.completions.create.return_value = type('obj', (object,), {
             'choices': [type('obj', (object,), {
@@ -205,7 +210,9 @@ class AISummarizationTestCase(TestCase):
         self.assertIn('summary', response.json())
         self.assertEqual(body['summary'], 'Empty summary.')
 
+
 class MultiNoteQuizTests(TestCase):
+
     def setUp(self):
         self.client = Client()
         self.url = reverse('generate_multi_note_quiz')
@@ -220,7 +227,11 @@ class MultiNoteQuizTests(TestCase):
         mock_client.chat.completions.create.return_value = type('obj', (object,), {
             'choices': [type('obj', (object,), {
                 'message': type('obj', (object,), {
-                    'content': '{"questions":[{"question":"What is Dog?","choices":["A human","An animal","A program","A food"],"answer":"A language"}]}'
+                    'content': (
+                        '{"questions":[{"question":"What is Dog?",'
+                        '"choices":["A human","An animal","A program","A food"],'
+                        '"answer":"A language"}]}'
+                    )
                 })
             })]
         })()
@@ -241,7 +252,7 @@ class MultiNoteQuizTests(TestCase):
                     'content': '{"questions":[]}'
                 })
             })]
-        })  ()
+        })()
 
         response = self.client.post(self.url, json.dumps({
             'note_ids': []

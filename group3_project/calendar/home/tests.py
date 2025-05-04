@@ -3,10 +3,11 @@ import requests
 from django.test import TestCase, Client
 from django.urls import reverse
 from datetime import datetime, timedelta
+from django.utils.timezone import now
 from home.models import Event, Module, ModuleItem
 from unittest.mock import patch
 import requests
-from home.models import Event, Module, ModuleItem
+from home.models import Event, Module, ModuleItem, UserProfile
 from home.views import get_active_courses, parse_date 
 from django.contrib.auth.models import User
 from unittest.mock import patch
@@ -399,3 +400,45 @@ class CustomAssignmentTests(TestCase):
 
         self.assertTrue(manual.get("custom", False), "Manual Task must have custom: true")
         self.assertFalse(canvas.get("custom", True), "Canvas Task must have custom: false")
+
+# Basic tests for main page
+class IndexViewTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username="testuser", password="testpass")
+        profile, _ = UserProfile.objects.get_or_create(user=self.user)
+        profile.canvas_token = "123456789"
+        profile.save()
+
+        Event.objects.create(
+            user=self.user,
+            title="Past Assignment",
+            event_type="assignment",
+            due_date=now() - timedelta(days=2),
+            course_name="Old Class"
+        )
+
+        Event.objects.create(
+            user=self.user,
+            title="Upcoming Assignment",
+            event_type="assignment",
+            due_date=now() + timedelta(days=3),
+            course_name="New Class"
+        )
+
+    def test_no_login(self):
+        response = self.client.get(reverse("index"))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/login", response.url)
+
+    def test_token_is_detected(self):
+        self.client.login(username="testuser", password="testpass")
+        response = self.client.get(reverse("index"))
+        self.assertContains(response, "Manage API Token")
+
+    def test_index_upcoming_only(self):
+        self.client.login(username="testuser", password="testpass")
+        response = self.client.get(reverse("index"))
+
+        self.assertContains(response, "Upcoming Assignment")
+        self.assertNotContains(response, "Past Assignment")
