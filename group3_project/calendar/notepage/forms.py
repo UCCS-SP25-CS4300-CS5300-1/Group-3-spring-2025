@@ -3,6 +3,7 @@ from .models import Note
 import os
 from django.core.exceptions import ValidationError
 
+
 class NoteForm(forms.ModelForm):
 
     class Meta:
@@ -23,6 +24,7 @@ class NoteForm(forms.ModelForm):
             }),
         }
 
+
 class FileImportForm(forms.Form):
 
     file = forms.FileField(
@@ -31,7 +33,7 @@ class FileImportForm(forms.Form):
         widget=forms.FileInput(attrs={'class': 'form-control'})
     )
     tags = forms.CharField(
-        required=False, 
+        required=False,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': 'Tags (comma separated)',

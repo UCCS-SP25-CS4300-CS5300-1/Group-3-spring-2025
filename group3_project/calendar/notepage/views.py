@@ -12,6 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 import docx
 
+
 @csrf_exempt
 @login_required
 def note_list(request):
@@ -31,6 +32,7 @@ def note_list(request):
         notes = Note.objects.filter(user=request.user).order_by('-updated_at')
 
     return render(request, 'notepage/note_list.html', {'notes': notes, 'tags': tags})
+
 
 @csrf_exempt
 @login_required
@@ -53,12 +55,14 @@ def create_note(request):
 
     return render(request, 'notepage/note_form.html', {'form': form, 'action': 'Create'})
 
+
 @csrf_exempt
 @login_required
 def note_detail(request, pk):
 
     note = get_object_or_404(Note, pk=pk, user=request.user)
     return render(request, 'notepage/note_detail.html', {'note': note})
+
 
 @csrf_exempt
 @login_required
@@ -80,6 +84,7 @@ def edit_note(request, pk):
 
     return render(request, 'notepage/note_form.html', {'form': form, 'note': note, 'action': 'Edit'})
 
+
 @csrf_exempt
 @login_required
 def delete_note(request, pk):
@@ -91,6 +96,7 @@ def delete_note(request, pk):
         return redirect('note_list')
 
     return render(request, 'notepage/note_confirm_delete.html', {'note': note})
+
 
 @csrf_exempt
 @login_required
@@ -123,6 +129,7 @@ def autosave_note(request):
 
     return JsonResponse({'success': False})
 
+
 @csrf_exempt
 @login_required
 def delete_tags(request):
@@ -136,6 +143,7 @@ def delete_tags(request):
         Tag.objects.filter(user=request.user).all().delete()
 
         return redirect('note_list')
+
 
 @csrf_exempt
 def import_file(request):
@@ -191,6 +199,7 @@ def import_file(request):
 
     return render(request, 'notepage/import_file.html', {'form': form})
 
+
 @csrf_exempt
 def get_note_content(request, pk):
 
@@ -199,6 +208,7 @@ def get_note_content(request, pk):
         return JsonResponse({'content': note.content})
     except Note.DoesNotExist:
         return JsonResponse({'error': 'Note not found'}, status=404)
+
 
 @csrf_exempt
 def summarize_note(request):
@@ -233,11 +243,13 @@ def summarize_note(request):
         except Exception as e:
             return JsonResponse({'summary': 'Error: ' + str(e)}, status=500)
 
+
 @csrf_exempt
 def multi_note_quiz_page(request):
 
     notes = Note.objects.filter(user=request.user)
     return render(request, 'notepage/quiz_page.html', {'notes': notes})
+
 
 @csrf_exempt
 def generate_multi_note_quiz(request):
