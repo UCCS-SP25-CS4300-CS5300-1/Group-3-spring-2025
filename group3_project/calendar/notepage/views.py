@@ -221,6 +221,10 @@ def generate_multi_note_quiz(request):
         try:
             client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
             data = json.loads(request.body)
+            
+            if 'note_ids' not in data or not isinstance(data['note_ids'], list):
+                return JsonResponse({'quiz': 'Error: invalid request, note_ids missing or not a list'}, status=500)
+            
             note_ids = data.get('note_ids', [])
             selected_notes = Note.objects.filter(pk__in=note_ids, user=request.user)
 
