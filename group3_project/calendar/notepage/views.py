@@ -186,7 +186,7 @@ def import_file(request):
                     "Please delete this note and upload a file with a support file type."
                 )
 
-            note = Note(title=title, content=content, user = request.user)
+            note = Note(title=title, content=content, user=request.user)
             note.save()
 
             tags = form.cleaned_data.get('tags')
@@ -224,8 +224,8 @@ def summarize_note(request):
 
             if note.summary and note.content == content:
                 return JsonResponse({'summary': note.summary})
-            
-            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))   
+
+            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
             response = client.chat.completions.create(
                 model="gpt-4",
                 messages=[
@@ -237,7 +237,7 @@ def summarize_note(request):
 
             note.summary = summary
             note.save(update_fields=['summary'])
-            
+
             return JsonResponse({'summary': summary})
 
         except Exception as e:

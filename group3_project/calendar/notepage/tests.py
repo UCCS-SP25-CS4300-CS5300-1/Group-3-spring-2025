@@ -6,8 +6,8 @@ from .models import Note
 from .forms import NoteForm
 from .forms import FileImportForm
 from django.core.files.uploadedfile import SimpleUploadedFile
-from taggit.models import Tag
 from django.contrib.auth.models import User
+
 
 class NoteTestCase(TestCase):
 
@@ -22,12 +22,10 @@ class NoteTestCase(TestCase):
         )
         self.test_note.tags.add("test", "django")
 
-
     def test_note_creation(self):
         self.assertEqual(self.test_note.title, "Test note")
         self.assertIn("markdown", self.test_note.content)
         self.assertEqual(self.test_note.tags.count(), 2)
-
 
     def test_valid_form(self):
         form = NoteForm(data={
@@ -37,18 +35,15 @@ class NoteTestCase(TestCase):
         })
         self.assertTrue(form.is_valid())
 
-
     def test_note_list(self):
         response = self.client.get(reverse('note_list'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.test_note.title)
 
-
     def test_note_detail(self):
         response = self.client.get(reverse('note_detail', args=[self.test_note.pk]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.test_note.title)
-
 
     def test_create_note(self):
         response = self.client.post(reverse('create_note'), {
@@ -61,9 +56,8 @@ class NoteTestCase(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('note_detail', args=[new_note.pk]))
 
-
     def test_edit_note(self):
-        response = self.client.post(reverse('edit_note', args=[self.test_note.pk]), {
+        self.client.post(reverse('edit_note', args=[self.test_note.pk]), {
             'title': 'Updated note',
             'content': 'Updated content',
             'tags': 'updated,note'
@@ -74,12 +68,10 @@ class NoteTestCase(TestCase):
         self.test_note.tags.set(['updated', 'note'])
         self.assertIn('updated', self.test_note.tags.names())
 
-
     def test_delete_note(self):
         response = self.client.post(reverse('delete_note', args=[self.test_note.pk]))
         self.assertFalse(Note.objects.filter(pk=self.test_note.pk).exists())
         self.assertEqual(response.url, reverse('note_list'))
-
 
     def test_autosave(self):
         data = {
@@ -91,7 +83,6 @@ class NoteTestCase(TestCase):
         response_data = json.loads(response.content)
         self.assertTrue(response_data['success'])
         self.assertTrue(Note.objects.filter(title='Autosaved note').exists())
-
 
     def test_filter_by_search(self):
         Note.objects.create(title="First note", content="content1", user=self.user)
@@ -115,17 +106,14 @@ class FileImportTestCase(TestCase):
         )
         self.test_note.tags.add("test")
 
-
     def test_import_form_valid(self):
         file = SimpleUploadedFile("test_file.txt", b"File content")
         form = FileImportForm(data={'tags': 'import,test'}, files={'file': file})
         self.assertTrue(form.is_valid())
 
-
     def test_import_form_invalid(self):
-        form = FileImportForm(data={'tags': 'import,test'}) # No file is passed
+        form = FileImportForm(data={'tags': 'import,test'})  # No file is passed
         self.assertFalse(form.is_valid())
-
 
     def test_import_text_file(self):
         content = "This is test content"
@@ -147,18 +135,16 @@ class FileImportTestCase(TestCase):
         self.assertIn('import', note.tags.names())
         self.assertIn('test', note.tags.names())
 
-
     def test_import_binary_file(self):
         binary_data = bytes([0x80, 0x81, 0x82, 0x83])
         file = SimpleUploadedFile("binary_file.bin", binary_data)
 
-        response = self.client.post(reverse('import_file'), {'file': file})
+        self.client.post(reverse('import_file'), {'file': file})
 
         self.assertTrue(Note.objects.filter(title='binary_file').exists())
         note = Note.objects.get(title='binary_file')
 
         self.assertIn("The file you tried to upload has an unsupported file type", note.content)
-
 
     def test_import_markdown_file(self):
         content = "# Markdown Test\n\n**Bold text**"
@@ -177,14 +163,13 @@ class AISummarizationTestCase(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.url = '/notepage/api/summarize/'  
+        self.url = '/notepage/api/summarize/'
         self.note = Note.objects.create(
             title="TEST",
             content="Caching tests is for the weak."
         )
 
-
-    @patch('notepage.views.OpenAI') 
+    @patch('notepage.views.OpenAI')
     def test_summarize_note_success(self, mock_openai):
 
         mock_client = mock_openai.return_value
@@ -206,7 +191,7 @@ class AISummarizationTestCase(TestCase):
         self.assertEqual(response.json()['summary'], 'This is a test summary.')
 
 
-    @patch('notepage.views.OpenAI') 
+    @patch('notepage.views.OpenAI')
     def test_summarize_note_missing_content(self, mock_openai):
         mock_openai.return_value.chat.completions.create.return_value = type('obj', (object,), {
             'choices': [type('obj', (object,), {
@@ -237,14 +222,17 @@ class MultiNoteQuizTests(TestCase):
         self.note1 = Note.objects.create(title="Note 1", content="Content about Python", user=self.user)
         self.note2 = Note.objects.create(title="Note 2", content="Content about Django", user=self.user)
 
-
     @patch('notepage.views.OpenAI')
     def test_generate_quiz_success(self, mock_openai):
         mock_client = mock_openai.return_value
         mock_client.chat.completions.create.return_value = type('obj', (object,), {
             'choices': [type('obj', (object,), {
                 'message': type('obj', (object,), {
-                    'content': '{"questions":[{"question":"What is Dog?","choices":["A human","An animal","A program","A food"],"answer":"A language"}]}'
+                    'content': (
+                        '{"questions":[{"question":"What is Dog?",'
+                        '"choices":["A human","An animal","A program","A food"],'
+                        '"answer":"A language"}]}'
+                    )
                 })
             })]
         })()
@@ -257,7 +245,6 @@ class MultiNoteQuizTests(TestCase):
         self.assertIn('quiz', response.json())
         self.assertIn('questions', json.loads(response.json()['quiz']))
 
-
     @patch('notepage.views.OpenAI')
     def test_generate_quiz_empty_note_ids(self, mock_openai):
         mock_openai.return_value.chat.completions.create.return_value = type('obj', (object,), {
@@ -266,7 +253,7 @@ class MultiNoteQuizTests(TestCase):
                     'content': '{"questions":[]}'
                 })
             })]
-        })  ()
+        })()
 
         response = self.client.post(self.url, json.dumps({
             'note_ids': []
@@ -275,7 +262,6 @@ class MultiNoteQuizTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('quiz', response.json())
 
-
     def test_generate_quiz_invalid_request(self):
         response = self.client.post(self.url, json.dumps({
             'invalid_field': [123]
@@ -283,7 +269,6 @@ class MultiNoteQuizTests(TestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertIn('quiz', response.json())
-
 
     @patch('notepage.views.OpenAI')
     def test_generate_quiz_openai_failure(self, mock_openai):
