@@ -1,10 +1,8 @@
 #urls.py
-from django.urls import path
-from .views import (
-    index, fetch_assignments, calendar_view, clear_calendar,
-    courses_list, course_detail, assignment_detail,
-    wipe_saved, add_event, user_settings, register
-)
+from django.urls import path, include
+from .views import *
+from django.contrib.auth import views as auth_views
+from . import views as home_views
 
 urlpatterns = [
     path('', index, name='index'),
