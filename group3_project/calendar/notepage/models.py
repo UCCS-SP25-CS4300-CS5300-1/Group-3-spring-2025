@@ -9,6 +9,7 @@ class Note(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notes', null = True)
     title = models.CharField(max_length=200)
     content = models.TextField()
+    summary = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     tags = TaggableManager(blank=True)
@@ -21,6 +22,12 @@ class Note(models.Model):
     
     def save(self, *args, **kwargs):
         self.updated_at = timezone.now()
+
+        if self.pk:
+            old_note = Note.objects.get(pk=self.pk).content
+            if old_note != self.content:
+                self.summary = None
+                
         super(Note, self).save(*args, **kwargs)
     
     @property

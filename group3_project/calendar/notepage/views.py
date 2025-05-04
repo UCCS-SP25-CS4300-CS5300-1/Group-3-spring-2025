@@ -182,10 +182,17 @@ def get_note_content(request, pk):
 def summarize_note(request):
     if request.method == 'POST':
         try:
-            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            
             data = json.loads(request.body)
             content = data.get('content', '')
+            note_id = data.get('note_id', None)
 
+            note = get_object_or_404(Note, pk=note_id)
+
+            if note.summary and note.content == content:
+                return JsonResponse({'summary': note.summary})
+            
+            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))   
             response = client.chat.completions.create(
                 model="gpt-4",
                 messages=[
@@ -193,8 +200,11 @@ def summarize_note(request):
                     {"role": "user", "content": content}
                 ]
             )
-
             summary = response.choices[0].message.content
+
+            note.summary = summary
+            note.save(update_fields=['summary'])
+            
             return JsonResponse({'summary': summary})
 
         except Exception as e:
@@ -211,6 +221,10 @@ def generate_multi_note_quiz(request):
         try:
             client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
             data = json.loads(request.body)
+            
+            if 'note_ids' not in data or not isinstance(data['note_ids'], list):
+                return JsonResponse({'quiz': 'Error: invalid request, note_ids missing or not a list'}, status=500)
+            
             note_ids = data.get('note_ids', [])
             selected_notes = Note.objects.filter(pk__in=note_ids, user=request.user)
 

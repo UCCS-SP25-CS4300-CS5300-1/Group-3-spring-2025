@@ -159,6 +159,10 @@ class AISummarizationTestCase(TestCase):
     def setUp(self):
         self.client = Client()
         self.url = '/notepage/api/summarize/'  
+        self.note = Note.objects.create(
+            title="TEST",
+            content="Caching tests is for the weak."
+        )
 
     @patch('notepage.views.OpenAI') 
     def test_summarize_note_success(self, mock_openai):
@@ -173,7 +177,8 @@ class AISummarizationTestCase(TestCase):
         })()
 
         response = self.client.post(self.url, json.dumps({
-            'content': 'This is a long test note that needs summarizing.'
+            'content': 'This is a long test note that needs summarizing.',
+            'note_id': self.note.pk
         }), content_type='application/json')
 
         self.assertEqual(response.status_code, 200)
@@ -185,15 +190,20 @@ class AISummarizationTestCase(TestCase):
         mock_openai.return_value.chat.completions.create.return_value = type('obj', (object,), {
             'choices': [type('obj', (object,), {
                 'message': type('obj', (object,), {
-                    'content': 'This is a test summary.'
+                    'content': 'Empty summary.'
                 })
             })]
         })()
 
-        response = self.client.post(self.url, json.dumps({}), content_type='application/json')
+        response = self.client.post(self.url, json.dumps({
+            'content': '',
+            'note_id': self.note.pk
+        }), content_type='application/json')
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn('summary', response.json())  
+        body = response.json()
+        self.assertIn('summary', response.json())
+        self.assertEqual(body['summary'], 'Empty summary.')
 
 class MultiNoteQuizTests(TestCase):
     def setUp(self):
