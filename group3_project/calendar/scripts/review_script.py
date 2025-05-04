@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
         # Call the API endpoint
         response = client.responses.create(
-            model="gpt-4o",
+            model="gpt-4",
             instructions="You are a helpful code review assistant.",
             input=prompt,
         )
