@@ -30,16 +30,25 @@ if __name__ == "__main__":
         prompt = f"Perform a code review on the following diff:\n{filtered_diff}"
 
         # Call the API endpoint
-        response = client.responses.create(
-            model="gpt-4o",
-            instructions="You are a helpful code review assistant.",
-            input=prompt,
-        )
-
+        try:
+            response = client.responses.create(
+                model="gpt-4o",
+                instructions="You are a helpful code review assistant.",
+                input=prompt,
+            )
+        except openai.PermissionDeniedError as e:
+            print(f"[ERROR] OpenAI Permission Denied: {e.user_message if hasattr(e, 'user_message') else str(e)}")
+            exit(1)
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            print("Traceback:")
+            print(traceback.print_exc())
+        
+        
         # Print the output from the AI
         print(response.output_text)
 
     except Exception as e:
         print(f"An error occurred: {e}")
         print("Traceback:")
-        traceback.print_exc()
+        print(traceback.print_exc())
