@@ -234,30 +234,115 @@ class ViewFunctionTests(TestCase):
 class FetchAssignmentsViewTests(TestCase):
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username='fetchuser', password='fetchpass')
-        self.client.login(username='fetchuser', password='fetchpass')
+        self.user = self.client.login(username='user', password='pass') or None
+        # ensure a user with a profile exists
+        from django.contrib.auth.models import User
+        u = User.objects.create_user(username='user', password='pass')
+        u.userprofile  # assume signal or auto-creation
+        self.client.login(username='user', password='pass')
         self.canvas_url = 'https://canvas.example.com'
-        self.api_token = 'token123'
+        self.api_token  = 'token123'
+
+    def test_non_post_redirects(self):
+        response = self.client.get(reverse('fetch_assignments'))
+        self.assertRedirects(response, reverse('index'))
+
+    @patch('home.views.get_active_courses', return_value=[])
+    def test_no_courses_redirects(self, mock_courses):
+        response = self.client.post(
+            reverse('fetch_assignments'),
+            {'canvas_url': self.canvas_url, 'api_token': self.api_token}
+        )
+        self.assertRedirects(response, reverse('index'))
+        mock_courses.assert_called_once_with(self.canvas_url, self.api_token)
 
     @patch('home.views.fetch_json')
-    def test_fetch_assignments_creates_events_modules_and_items(self, mock_fetch):
-        def side_effect(url, headers, timeout=10):
-            if 'courses?enrollment_state=active' in url:
-                return [{'id':1, 'name':'Course1'}]
-            if '/assignments?' in url:
-                return [{'name':'Assign2025','due_at':'2025-09-01T00:00:00Z','description':'D1'}, {'name':'Old','due_at':'2024-01-01T00:00:00Z','description':'D0'}]
-            if '/modules?' in url:
-                return [{'id':101,'name':'ModA','description':'MD'}]
+    @patch('home.views.get_active_courses')
+    def test_success_creates_events_modules_and_items(self, mock_courses, mock_fetch):
+        mock_courses.return_value = [{'id': 1, 'name': 'Course1'}]
+
+        def side_effect(url, headers):
+            if 'assignments?' in url:
+                return [{'name': 'Assign', 'due_at': '2025-05-01T00:00:00Z', 'description': 'D'}]
+            if 'modules?' in url:
+                return [{'id': 10, 'name': 'ModA', 'description': 'MD'}]
             if '/items' in url:
-                return [{'title':'It1','type':'Page','external_url':'http://x','content':'C1'}]
+                return [{'title': 'It1', 'type': 'Page', 'external_url': 'http://x', 'content': 'C1'}]
             return []
+
         mock_fetch.side_effect = side_effect
 
-        response = self.client.post(reverse('fetch_assignments'), {'canvas_url': self.canvas_url, 'api_token': self.api_token})
+        response = self.client.post(
+            reverse('fetch_assignments'),
+            {'canvas_url': self.canvas_url, 'api_token': self.api_token}
+        )
         self.assertRedirects(response, reverse('calendar_view'))
+
         self.assertEqual(Event.objects.count(), 1)
         self.assertEqual(Module.objects.count(), 1)
         self.assertEqual(ModuleItem.objects.count(), 1)
+
+    @patch('home.views.fetch_json', side_effect=Exception("fail"))
+    @patch('home.views.get_active_courses')
+    def test_fetch_json_errors(self, mock_courses, mock_fetch):
+        # fetch_json always throws — assignments/modules both empty, module_jobs empty
+        mock_courses.return_value = [{'id': 2, 'name': 'Course2'}]
+
+        response = self.client.post(
+            reverse('fetch_assignments'),
+            {'canvas_url': self.canvas_url, 'api_token': self.api_token}
+        )
+        self.assertRedirects(response, reverse('calendar_view'))
+        self.assertEqual(Event.objects.count(), 0)
+        self.assertEqual(Module.objects.count(), 0)
+        self.assertEqual(ModuleItem.objects.count(), 0)
+
+    @patch('home.views.fetch_json')
+    @patch('home.views.get_active_courses')
+    def test_old_assignments_filtered(self, mock_courses, mock_fetch):
+        mock_courses.return_value = [{'id': 3, 'name': 'Course3'}]
+
+        def side_effect(url, headers):
+            if 'assignments?' in url:
+                # outside current year → should be ignored
+                return [{'name': 'Old', 'due_at': '2024-01-01T00:00:00Z', 'description': 'D'}]
+            if 'modules?' in url:
+                return []
+            return []
+
+        mock_fetch.side_effect = side_effect
+
+        response = self.client.post(
+            reverse('fetch_assignments'),
+            {'canvas_url': self.canvas_url, 'api_token': self.api_token}
+        )
+        self.assertRedirects(response, reverse('calendar_view'))
+        self.assertEqual(Event.objects.count(), 0)
+        self.assertEqual(Module.objects.count(), 0)
+        self.assertEqual(ModuleItem.objects.count(), 0)
+
+    @patch('home.views.fetch_json')
+    @patch('home.views.get_active_courses')
+    def test_no_modules_creates_only_events(self, mock_courses, mock_fetch):
+        mock_courses.return_value = [{'id': 4, 'name': 'Course4'}]
+
+        def side_effect(url, headers):
+            if 'assignments?' in url:
+                return [{'name': 'AssignX', 'due_at': '2025-04-01T00:00:00Z', 'description': 'DX'}]
+            if 'modules?' in url:
+                return []
+            return []
+
+        mock_fetch.side_effect = side_effect
+
+        response = self.client.post(
+            reverse('fetch_assignments'),
+            {'canvas_url': self.canvas_url, 'api_token': self.api_token}
+        )
+        self.assertRedirects(response, reverse('calendar_view'))
+        self.assertEqual(Event.objects.count(), 1)
+        self.assertEqual(Module.objects.count(), 0)
+        self.assertEqual(ModuleItem.objects.count(), 0)
 
 # Test for assignment creation and displaying custom assignments properly in calendar view
 class CustomAssignmentTests(TestCase):
