@@ -29,6 +29,13 @@
                         <h5 class="card-title">{{ note.title }}</h5>
                         <h6 class="card-subtitle mb-2 text-muted">{{ note.updated_at|date:"M d, Y" }}</h6>
                         <p class="card-text">{{ note.content|truncatechars:100 }}</p>
+                        <div class="note-summary mt-2 text-black" style="font-weight:500; line-height:1.4">
+                            {% if note.summary %}
+                              Summary: {{ note.summary }}
+                            {% else %}
+                              Loading summary…
+                            {% endif %}
+                        </div>
                         <div class="mb-2">
                             {% for tag in note.tags.all %}
                                 <span class="tag-badge">{{ tag.name }}</span>
@@ -51,10 +58,11 @@
     </div>
     <script>
     document.addEventListener("DOMContentLoaded", function () {
+
         const toggleBtn = document.getElementById("toggle-summary");
-        const summariesEnabled = localStorage.getItem("summariesEnabled") !== "false"; 
+        const summariesEnabled = localStorage.getItem("summariesEnabled") !== "false";      
     
-        // THis function is simply to change the color of the AI summarization button based on if it is off or on. Blue means on White means off
+        // This function is simply to change the color of the AI summarization button based on if it is off or on. Blue means on White means off
         function updateToggleLabel() {
             const isEnabled = localStorage.getItem("summariesEnabled") !== "false";
 
@@ -78,46 +86,58 @@
             localStorage.setItem("summariesEnabled", newSetting);
             location.reload(); 
         });
-    
-        if (!summariesEnabled) return; 
-    
+
         const cards = document.querySelectorAll(".note-card");
     
-        // This part will take the content of each note page and send it to OpenAPI and spit back a 1-2 sentence summarization
-        // If it cannot summarize the note, it will spit an error
-        cards.forEach(card => {
-            const detailLink = card.querySelector("a.btn-primary");
-            const noteId = detailLink.href.split("/").filter(Boolean).pop();
+        // If the button is disabled, the summaries will completely not appear until the user clicks enable.
+        if (!summariesEnabled){
+            document.querySelectorAll(".note-summary").forEach(card => {
+                card.style.display = "none";
+            });
+        }  else {
+
+            // This part will take the content of each note page and send it to OpenAPI and spit back a 1-2 sentence summarization
+            // If it cannot summarize the note, it will spit an error. This also stores and caches the summary.
+            cards.forEach(card => {
+                const detailLink = card.querySelector("a.btn-primary");
+                const noteId = detailLink.href.split("/").filter(Boolean).pop();
+                const summaryDiv = card.querySelector(".note-summary");
+            
+                if (!summaryDiv.innerText.startsWith("Loading summary")){
+                    return;
+                }
+            
+                card.querySelector(".card-body").appendChild(summaryDiv);
     
-            const summaryDiv = document.createElement("div");
-            summaryDiv.classList.add("note-summary", "mt-2");
-            summaryDiv.style.color = "black";
-            summaryDiv.style.fontWeight = "500";
-            summaryDiv.style.lineHeight = "1.4";
-            summaryDiv.innerText = "Loading summary...";
-            card.querySelector(".card-body").appendChild(summaryDiv);
-    
-            fetch(`/notepage/api/notes/${noteId}/content/`)
-                .then(res => res.json())
-                .then(data => {
-                    return fetch('/notepage/api/summarize/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': '{{ csrf_token }}',
-                        },
-                        body: JSON.stringify({ content: data.content })
+                fetch(`/notepage/api/notes/${noteId}/content/`)
+                    .then(res => res.json())
+                    .then(data => {
+                        return fetch('/notepage/api/summarize/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}',
+                            },
+                            body: JSON.stringify({ 
+                                content: data.content,
+                                note_id: noteId 
+                            })
+                        });
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        summaryDiv.innerText = "Summary: " + data.summary;
+                    })
+                    .catch(error => {
+                        console.error("Error loading summary:", error);
+                        summaryDiv.innerText = "Could not load summary.";
                     });
-                })
-                .then(res => res.json())
-                .then(data => {
-                    summaryDiv.innerText = "Summary: " + data.summary;
-                })
-                .catch(error => {
-                    console.error("Error loading summary:", error);
-                    summaryDiv.innerText = "Could not load summary.";
-                });
-        });
+            });
+        }
+    
+        
+    
+        
     });
     </script>
 {% endblock %}
