@@ -44,7 +44,6 @@ if __name__ == "__main__":
             print("Traceback:")
             print(traceback.print_exc())
         
-        
         # Print the output from the AI
         print(response.output_text)
 
