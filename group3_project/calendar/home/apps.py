@@ -7,3 +7,4 @@ class HomeConfig(AppConfig):
 
     def ready(self) -> None:
         import home.signals
+        

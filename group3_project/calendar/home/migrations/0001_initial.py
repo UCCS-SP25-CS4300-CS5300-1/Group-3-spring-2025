@@ -18,7 +18,8 @@ class Migration(migrations.Migration):
                 ('title', models.CharField(max_length=255)),
                 ('description', models.TextField()),
                 ('due_date', models.DateTimeField()),
-                ('event_type', models.CharField(choices=[('assignment', 'Assignment'), ('quiz', 'Quiz'), ('test', 'Test')], max_length=10)),
+                ('event_type', models.CharField(choices=[('assignment', 'Assignment'),
+                 ('quiz', 'Quiz'), ('test', 'Test')], max_length=10)),
             ],
         ),
     ]
