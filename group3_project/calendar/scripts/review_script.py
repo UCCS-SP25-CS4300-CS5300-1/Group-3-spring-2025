@@ -22,7 +22,7 @@ if __name__ == "__main__":
             if ".tagsinput()" in line or "#autosaveStatus" in line:
                 continue
             filtered_lines.append(line)
-        
+
         # Join filtered lines into a single string
         filtered_diff = "\n".join(filtered_lines)
 
@@ -42,4 +42,4 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"An error occurred: {e}")
         print("Traceback:")
-        traceback.print_exc()
+        print(traceback.print_exc())

@@ -23,7 +23,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('home/', include('home.urls')),
     path('notepage/', include('notepage.urls')),
-    path('',include('home.urls')),
+    path('', include('home.urls')),
 ]
 
 if settings.DEBUG:

@@ -5,7 +5,7 @@ certifi==2025.1.31
 charset-normalizer==3.4.1
 coverage==7.7.0
 distro==1.9.0
-Django==4.2.11
+Django==4.2.20
 django-taggit==6.1.0
 djangorestframework==3.15.2
 h11==0.14.0
@@ -36,5 +36,6 @@ urllib3==2.3.0
 wheel==0.42.0
 gunicorn==23.0.0
 flake8==7.0.0
+flake8-annotations-coverage==0.0.6
 safety==3.3.1
 python-docx==1.1.2

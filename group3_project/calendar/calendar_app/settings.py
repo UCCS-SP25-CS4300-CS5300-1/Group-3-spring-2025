@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import os
+# from dotenv import load_dotenv
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -34,9 +35,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-@+yu7z2i^)0&wfn)iafs!*3&r^z_af@)hme0%le$itmaj*ok%v'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['app-abarrag4-5.devedu.io','calendai.space', 'editor-ashleeparadis-5.devedu.io', 'app-ashleeparadis-5.devedu.io','app-carsoncontainer-5.devedu.io','app-bgoins-5.devedu.io','editor-carsoncontainer-5.devedu.io','calendai.up.railway.app' ]
+ALLOWED_HOSTS = [
+    'app-abarrag4-5.devedu.io', 
+    'calendai.space',
+    'editor-ashleeparadis-5.devedu.io', 
+    'app-ashleeparadis-5.devedu.io',
+    'app-carsoncontainer-5.devedu.io', 
+    'app-bgoins-5.devedu.io',
+    'editor-carsoncontainer-5.devedu.io', 
+    'calendai.up.railway.app']
 
 
 # Application definition
@@ -117,11 +126,12 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 CSRF_TRUSTED_ORIGINS = [
 
-    "https://app-carsoncontainer-5.devedu.io","https://calendai.space","http://calendai.space","https://app-bgoins-5.devedu.io","https://calendai.up.railway.app","http://calendai.up.railway.app","https://app-ashleeparadis-5.devedu.io", "https://app-abarrag4-5.devedu.io",
+    "https://app-carsoncontainer-5.devedu.io", "https://calendai.space",
+    "http://calendai.space", "https://app-bgoins-5.devedu.io",
+    "https://calendai.up.railway.app", "http://calendai.up.railway.app",
+    "https://app-ashleeparadis-5.devedu.io", "https://app-abarrag4-5.devedu.io"
 
 ]
-
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
@@ -134,10 +144,8 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
-
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -146,8 +154,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-LOGIN_REDIRECT_URL = 'index'   
+LOGIN_REDIRECT_URL = 'index'
 LOGOUT_REDIRECT_URL = 'login'
 LOGIN_URL = 'login'
 
+# load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")

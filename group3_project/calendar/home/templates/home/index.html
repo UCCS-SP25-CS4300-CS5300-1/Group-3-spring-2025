@@ -26,6 +26,32 @@
         </p>
       </header>
 
+      {% if token_present %}
+      <!-- Assignment List -->
+      <section class="border-t border-indigo-100 dark:border-gray-700 px-10 py-10">
+        <h2 class="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">
+          Your Upcoming Assignments
+        </h2>
+        {% if assignment_list %}
+          <ul class="space-y-4">
+            {% for a in assignment_list %}
+              <li class="p-4 bg-white dark:bg-gray-700 rounded shadow">
+                <strong>{{ a.title }}</strong><br>
+                Due: {{ a.due_date|date:"M d, Y H:i" }}<br>
+                <span class="text-sm text-gray-500">{{ a.course_name }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-gray-600 dark:text-gray-300">No assignments found for this year.</p>
+        {% endif %}
+        <div class="mt-8 text-right">
+          <a href="{% url 'user_settings' %}" class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">
+            Manage API Token in Settings
+          </a>
+        </div>
+      </section>
+      {% else %}
       <!-- Getting started -->
       <section class="border-t border-indigo-100 dark:border-gray-700 px-10 py-10">
         <h2 class="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">
@@ -80,6 +106,7 @@
           </button>
         </form>
       </section>
+      {% endif %}
 
       <!-- Footer -->
       <footer class="border-t border-indigo-100 dark:border-gray-700 text-center text-sm text-gray-500 dark:text-gray-400 px-10 py-6">
