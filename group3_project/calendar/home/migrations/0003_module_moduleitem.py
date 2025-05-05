@@ -27,8 +27,11 @@ class Migration(migrations.Migration):
                 ('title', models.CharField(max_length=255)),
                 ('item_type', models.CharField(blank=True, max_length=50)),
                 ('content', models.TextField(blank=True, null=True)),
-                ('module', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, 
-                    related_name='items', to='home.module')),
+                ('module', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE,
+                    related_name='items',
+                    to='home.module',
+                )),
             ],
         ),
     ]
