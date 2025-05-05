@@ -17,4 +17,3 @@ def create_or_update_user_profile(
         UserProfile.objects.create(user=instance)
     else:
         instance.userprofile.save()
-        

@@ -11,7 +11,7 @@ class Event(models.Model):
         ('test', 'Test'),
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null = True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     title = models.CharField(max_length=255)  # Name for assignment, quiz, or test
     description = models.TextField(blank=True, null=True)
     due_date = models.DateTimeField()
@@ -19,7 +19,7 @@ class Event(models.Model):
     course_name = models.CharField(max_length=100, null=True)
     custom = models.BooleanField(default=False)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.title} ({self.get_event_type_display()})"
 
 
@@ -30,20 +30,20 @@ class Module(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.course_name} - {self.title}"
 
 
 # Stores individual items inside the module
 class ModuleItem(models.Model):
     module = models.ForeignKey(Module, on_delete=models.CASCADE, related_name='items')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null = True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     title = models.CharField(max_length=255)
     item_type = models.CharField(max_length=50, blank=True)  # e.g., "Page", "File", etc.
     file_url = models.URLField(blank=True, null=True)  # URL to a file hosted externally (Canvas)
     content = models.TextField(blank=True, null=True)  # Content field
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.title
 
 
@@ -52,5 +52,5 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     canvas_token = models.CharField(max_length=255, blank=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.user.username}'s Profile"
