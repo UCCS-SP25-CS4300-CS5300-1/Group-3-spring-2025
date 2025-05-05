@@ -7,7 +7,7 @@
   <ul class="list-group">
     {% for course in courses %}
       <li class="list-group-item">
-        <a href="{% url 'course_detail' course %}">{{ course }}</a>
+        <a href="{% url 'course_detail' course|urlencode %}">{{ course }}</a>
       </li>
     {% empty %}
       <li class="list-group-item">No courses available.</li>

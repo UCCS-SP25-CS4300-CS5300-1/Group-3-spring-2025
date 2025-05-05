@@ -2,7 +2,7 @@ import logging
 import json
 import traceback
 from datetime import datetime
-
+from urllib.parse import unquote
 import requests
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -139,6 +139,7 @@ def fetch_assignments(request):
                 module_jobs.append((cid, cname, m["id"], mod_title))
 
         with transaction.atomic():
+            Event.objects.filter(user=request.user, event_type="assignment").delete()
             Event.objects.bulk_create(event_objs)
             Module.objects.bulk_create(module_objs)
 
@@ -181,6 +182,8 @@ def courses_list(request):
 
 @csrf_exempt
 def course_detail(request, course_name):
+    course_name = unquote(course_name)
+
     assignments = Event.objects.filter(
         course_name=course_name,
         event_type="assignment",
@@ -242,7 +245,8 @@ def index(request):
 
     return render(request, "home/index.html", {
         "token_present": token_present,
-        "assignment_list": assignment_list
+        "assignment_list": assignment_list,
+        "profile": profile
     })
 
 

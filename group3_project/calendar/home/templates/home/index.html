@@ -32,6 +32,12 @@
         <h2 class="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">
           Your Upcoming Assignments
         </h2>
+        <form method="POST" action="{% url 'fetch_assignments' %}">
+          {% csrf_token %}
+          <input type="hidden" name="canvas_url" value="{{ profile.canvas_url }}">
+          <input type="hidden" name="api_token" value="{{ profile.canvas_token }}">
+          <button type="submit">Fetch Assignments</button>
+        </form> 
         {% if assignment_list %}
           <ul class="space-y-4">
             {% for a in assignment_list %}
