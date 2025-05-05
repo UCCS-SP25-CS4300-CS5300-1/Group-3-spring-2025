@@ -38,48 +38,46 @@
     <!-- Update canvas API info -->
     <section class="mt-5">
         <h3>Update Canvas API Information</h3>
-    
+
         {% if profile.canvas_token %}
         <p class="text-muted">
             <b>Current Token Prefix:</b> {{ profile.canvas_token|slice:":6" }}...
         </p>
         {% endif %}
-    
+
         <form method="post" action="{% url 'fetch_assignments' %}">
-        {% csrf_token %}
-        <div class="mb-3">
-            <label for="canvas_url" class="form-label fw-bold">Canvas URL</label>
-            <input
-            type="url"
-            name="canvas_url"
-            id="canvas_url"
-            value="{{ profile.canvas_url }}"
-            class="form-control"
-            placeholder="https://school.instructure.com"
-            required>
-        </div>
-    
-        <div class="mb-3">
-            <label for="canvas_token" class="form-label fw-bold">API Token</label>
-            <div class="input-group">
-            <input
-                type="password"
-                name="canvas_token"
-                id="canvas_token"
-                value="{{ profile.canvas_token }}"
-                class="form-control"
-                placeholder="Enter a new Canvas API token"
-                required>
-            <button type="button" class="btn btn-outline-secondary" onclick="toggleTokenVisibility()">
-                Show
-            </button>
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="canvas_url" class="form-label fw-bold">Canvas URL</label>
+                <input
+                    type="url"
+                    name="canvas_url"
+                    id="canvas_url"
+                    class="form-control"
+                    placeholder="https://school.instructure.com"
+                    required>
             </div>
-        </div>
-    
-        <button type="submit" class="btn btn-primary">Update API Info</button>
+
+            <div class="mb-3">
+                <label for="canvas_token" class="form-label fw-bold">API Token</label>
+                <div class="input-group">
+                    <input
+                        type="password"
+                        name="canvas_token"
+                        id="canvas_token"
+                        class="form-control"
+                        placeholder="Enter a new Canvas API token"
+                        required>
+                    <button type="button" class="btn btn-outline-secondary" onclick="toggleTokenVisibility()">
+                        Show
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Update API Info</button>
         </form>
     </section>
-  
+
     <script>
     function toggleTokenVisibility() {
         const tokenInput = document.getElementById('canvas_token');
