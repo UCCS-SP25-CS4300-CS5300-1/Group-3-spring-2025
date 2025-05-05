@@ -1,5 +1,6 @@
 from django import forms
 from home.models import Event
+from typing import Any
 
 
 class EventForm(forms.ModelForm):
@@ -15,7 +16,7 @@ class EventForm(forms.ModelForm):
         model = Event
         fields = ['title', 'description', 'due_date', 'event_type', 'course_name']
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         if user:

@@ -2,7 +2,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-#Model for assignments, quizzes, and tests
+
+# Model for assignments, quizzes, and tests
 class Event(models.Model):
     EVENT_TYPES = [
         ('assignment', 'Assignment'),
@@ -10,45 +11,46 @@ class Event(models.Model):
         ('test', 'Test'),
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null = True)
-    title = models.CharField(max_length=255) #Name for assignment, quiz, or test
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    title = models.CharField(max_length=255)  # Name for assignment, quiz, or test
     description = models.TextField(blank=True, null=True)
     due_date = models.DateTimeField()
     event_type = models.CharField(max_length=10, choices=EVENT_TYPES)
     course_name = models.CharField(max_length=100, null=True)
     custom = models.BooleanField(default=False)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.title} ({self.get_event_type_display()})"
 
 
-#Module model to store Canvas module information
+# Module model to store Canvas module information
 class Module(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null = True)
-    course_name = models.CharField(max_length=100)  
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    course_name = models.CharField(max_length=100)
     title = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)  
+    description = models.TextField(blank=True, null=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.course_name} - {self.title}"
 
 
-#Stores individual items inside the module
+# Stores individual items inside the module
 class ModuleItem(models.Model):
     module = models.ForeignKey(Module, on_delete=models.CASCADE, related_name='items')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null = True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     title = models.CharField(max_length=255)
-    item_type = models.CharField(max_length=50, blank=True)  #e.g., "Page", "File", etc.
-    file_url = models.URLField(blank=True, null=True)  #URL to a file hosted externally (Canvas)
-    content = models.TextField(blank=True, null=True)  #Content field
+    item_type = models.CharField(max_length=50, blank=True)  # e.g., "Page", "File", etc.
+    file_url = models.URLField(blank=True, null=True)  # URL to a file hosted externally (Canvas)
+    content = models.TextField(blank=True, null=True)  # Content field
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.title
 
-#Model for user profile including the api access token
+
+# Model for user profile including the api access token
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     canvas_token = models.CharField(max_length=255, blank=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.user.username}'s Profile"
