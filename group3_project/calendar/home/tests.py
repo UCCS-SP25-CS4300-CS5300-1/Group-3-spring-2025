@@ -108,7 +108,7 @@ class CalendarViewTests(TestCase):
         )
 
 # Test to check if there is anything missing/Invalid
-    def test_fetch_assignments_invalid_credentials(self): 
+    def test_fetch_assignments_invalid_credentials(self):
         response = self.client.post(reverse('fetch_assignments'), {
             'canvas_url': 'https://invalid-canvas.example.com',
             'api_token': ''
@@ -214,7 +214,7 @@ class ViewFunctionTests(TestCase):
         Event.objects.create(
             user=self.user,
             title="A1", description="D1",
-            due_date=datetime(2025, 6, 1), 
+            due_date=datetime(2025, 6, 1),
             event_type="assignment",
             course_name="C1")
         Module.objects.create(user=self.user, course_name="C1", title="Mod1", description="Desc")
@@ -228,7 +228,7 @@ class ViewFunctionTests(TestCase):
             user=self.user,
             title="A2",
             description="Desc2",
-            due_date=datetime(2025, 7, 1), 
+            due_date=datetime(2025, 7, 1),
             event_type="test",
             course_name="C2")
         response = self.client.get(reverse('assignment_detail', args=[ev.id]))
@@ -241,7 +241,7 @@ class ViewFunctionTests(TestCase):
             user=self.user,
             title="X",
             description="D",
-            due_date=datetime(2025, 8, 1), 
+            due_date=datetime(2025, 8, 1),
             event_type="assignment",
             course_name="C3")
         Module.objects.create(user=self.user, course_name="C3", title="Mod3", description="Desc3")
