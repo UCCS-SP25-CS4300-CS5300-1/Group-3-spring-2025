@@ -38,13 +38,13 @@ SECRET_KEY = 'django-insecure-@+yu7z2i^)0&wfn)iafs!*3&r^z_af@)hme0%le$itmaj*ok%v
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'app-abarrag4-5.devedu.io', 
+    'app-abarrag4-5.devedu.io',
     'calendai.space',
-    'editor-ashleeparadis-5.devedu.io', 
+    'editor-ashleeparadis-5.devedu.io',
     'app-ashleeparadis-5.devedu.io',
-    'app-carsoncontainer-5.devedu.io', 
+    'app-carsoncontainer-5.devedu.io',
     'app-bgoins-5.devedu.io',
-    'editor-carsoncontainer-5.devedu.io', 
+    'editor-carsoncontainer-5.devedu.io',
     'calendai.up.railway.app']
 
 

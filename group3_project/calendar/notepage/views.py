@@ -81,7 +81,6 @@ def edit_note(request, pk):
     else:
         form = NoteForm(instance=note)
 
-
     return render(request, 'notepage/note_form.html', {'form': form, 'note': note, 'action': 'Edit'})
 
 

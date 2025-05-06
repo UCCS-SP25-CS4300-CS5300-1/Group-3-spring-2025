@@ -53,18 +53,18 @@ class CalendarViewTests(TestCase):
             user=self.user,
             title="Alice's Event",
             description="Should be deleted",
-            due_date=datetime(2025,3,20),
+            due_date=datetime(2025, 3, 20),
             event_type="assignment"
         )
         Event.objects.create(
             user=self.other,
             title="Bob's Event",
             description="Should survive",
-            due_date=datetime(2025,3,21),
+            due_date=datetime(2025, 3, 21),
             event_type="test"
         )
 
-        response=self.client.post(reverse('clear_calendar'))
+        response = self.client.post(reverse('clear_calendar'))
         self.assertRedirects(response, reverse('calendar_view'))
 
         # alice’s events are gone
@@ -106,7 +106,6 @@ class CalendarViewTests(TestCase):
             1,
             "Events belonging to other users must remain"
         )
-
 
 # Test to check if there is anything missing/Invalid
     def test_fetch_assignments_invalid_credentials(self):
@@ -215,7 +214,7 @@ class ViewFunctionTests(TestCase):
         Event.objects.create(
             user=self.user,
             title="A1", description="D1",
-            due_date=datetime(2025,6,1),
+            due_date=datetime(2025, 6, 1),
             event_type="assignment",
             course_name="C1")
         Module.objects.create(user=self.user, course_name="C1", title="Mod1", description="Desc")
@@ -229,7 +228,7 @@ class ViewFunctionTests(TestCase):
             user=self.user,
             title="A2",
             description="Desc2",
-            due_date=datetime(2025,7,1),
+            due_date=datetime(2025, 7, 1),
             event_type="test",
             course_name="C2")
         response = self.client.get(reverse('assignment_detail', args=[ev.id]))
@@ -242,8 +241,8 @@ class ViewFunctionTests(TestCase):
             user=self.user,
             title="X",
             description="D",
-            due_date=datetime(2025,8,1),
-            event_type="assignment", 
+            due_date=datetime(2025, 8, 1),
+            event_type="assignment",
             course_name="C3")
         Module.objects.create(user=self.user, course_name="C3", title="Mod3", description="Desc3")
         ModuleItem.objects.create(module=Module.objects.first(), title="Item3", item_type="T")

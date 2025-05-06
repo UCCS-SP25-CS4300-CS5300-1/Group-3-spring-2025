@@ -16,6 +16,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='note',
             name='user',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='notes', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='notes',
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]
