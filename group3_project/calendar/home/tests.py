@@ -252,9 +252,9 @@ class ViewFunctionTests(TestCase):
         self.assertEqual(Event.objects.filter(user=self.user).count(), 0)
         self.assertEqual(Module.objects.filter(user=self.user).count(), 0)
         self.assertEqual(
-             ModuleItem.objects.filter(module__user=self.user).count(),
-             0
-         )
+            ModuleItem.objects.filter(module__user=self.user).count(),
+            0
+        )
 
 
 # fetch_assignments testing
